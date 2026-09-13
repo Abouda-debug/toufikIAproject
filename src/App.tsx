@@ -206,31 +206,21 @@ export default function App() {
     setIsConfirmationOpen(true);
   };
 
-  // Actions: Save confirmed product (from scan or manual add)
- const handleSaveProduct = (productData: Omit<ProductItem, 'id' | 'createdAt'>) => {
-  if (editingProduct) {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === editingProduct.id ? { ...p, ...productData } : p))
-    );
-    showToast(t.productUpdated(productData.name), 'success');
-  } else {
-    const newProduct: ProductItem = {
-      ...productData,
-      id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      createdAt: new Date().toISOString(),
-    };
-    setProducts((prev) => [newProduct, ...prev]);
-    showToast(t.productSaved(productData.name), 'success');
-  }
-  setIsConfirmationOpen(false);
+    // Actions: Save confirmed product (from scan or manual add)
+  const handleSaveProduct = (productData: Omit<ProductItem, 'id' | 'createdAt'>) => {
+    if (editingProduct) {
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editingProduct.id ? { ...p, ...productData } : p))
+      );
+      showToast(t.productUpdated(productData.name), 'success');
+    } else {
+      const newProduct: ProductItem = {
         ...productData,
         id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         createdAt: new Date().toISOString(),
       };
       setProducts((prev) => [newProduct, ...prev]);
-      showToast(`Produit "${productData.name}" enregistré avec succès !`, 'success');
-    }
-    setIsConfirmationOpen(false);
+      showToast(t.productSaved(productData.name), 'success');
     }
     setIsConfirmationOpen(false);
     setEditingProduct(null);
