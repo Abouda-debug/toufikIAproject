@@ -1,0 +1,6 @@
+{
+  "name": "nowaste",
+  "description": "Application anti-gaspillage alimentaire avec scan intelligent par caméra et IA Gemini pour extraire automatiquement les dates de péremption et envoyer des rappels.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
