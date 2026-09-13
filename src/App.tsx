@@ -153,7 +153,7 @@ export default function App() {
           : p
       )
     );
-    showToast(t.savedFromWaste(target?.name || 'Produit'), 'success');`
+    showToast(t.savedFromWaste(target?.name || 'Produit'), 'success');
   };
 
   // Actions: Swipe to Mark "Jeté"
@@ -166,7 +166,7 @@ export default function App() {
           : p
       )
     );
-    showToast(t.markedDiscarded(target?.name || 'Produit'), 'warning');`
+    showToast(t.markedDiscarded(target?.name || 'Produit'), 'warning');
   };
 
   // Actions: Start Camera Scan
@@ -207,12 +207,22 @@ export default function App() {
   };
 
   // Actions: Save confirmed product (from scan or manual add)
-  const handleSaveProduct = (productData: Omit<ProductItem, 'id' | 'createdAt'>) => {
-    if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === editingProduct.id ? { ...p, ...productData } : p))
-      );
-      showToast(t.productUpdated(productData.name), 'success');`
+ const handleSaveProduct = (productData: Omit<ProductItem, 'id' | 'createdAt'>) => {
+  if (editingProduct) {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === editingProduct.id ? { ...p, ...productData } : p))
+    );
+    showToast(t.productUpdated(productData.name), 'success');
+  } else {
+    const newProduct: ProductItem = {
+      ...productData,
+      id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setProducts((prev) => [newProduct, ...prev]);
+    showToast(t.productSaved(productData.name), 'success');
+  }
+  setIsConfirmationOpen(false);
         ...productData,
         id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         createdAt: new Date().toISOString(),
@@ -298,8 +308,8 @@ export default function App() {
               </h3>
               <p className="text-xs text-stone-500 max-w-sm mx-auto mt-1">
                 {searchQuery || activeFilter !== 'all'
-                  ? 't.tryDifferentSearch'
-                  : 't.emptyStateHint. L’IA Gemini extraira automatiquement la date !'}
+                 ? t.tryDifferentSearch
+: t.emptyStateHint}
               </p>
             </div>
             <div className="pt-2 flex justify-center gap-2">
