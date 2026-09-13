@@ -44,7 +44,8 @@ import { CameraScanModal } from './components/CameraScanModal';
 import { ProductConfirmationModal } from './components/ProductConfirmationModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { StatsModal } from './components/StatsModal';
-
+import { useTranslations } from './i18n';
+const { t } = useTranslations();
 export default function App() {
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   const [activeFilter, setActiveFilter] = useState<'all' | 'urgent' | 'warning' | 'safe'>('all');
@@ -152,7 +153,7 @@ export default function App() {
           : p
       )
     );
-    showToast(`🎉 "${target?.name || 'Produit'}" sauvé du gaspillage !`, 'success');
+    showToast(t.savedFromWaste(target?.name || 'Produit'), 'success');`
   };
 
   // Actions: Swipe to Mark "Jeté"
@@ -165,7 +166,7 @@ export default function App() {
           : p
       )
     );
-    showToast(`🗑️ "${target?.name || 'Produit'}" marqué comme jeté.`, 'warning');
+    showToast(t.markedDiscarded(target?.name || 'Produit'), 'warning');`
   };
 
   // Actions: Start Camera Scan
@@ -211,15 +212,15 @@ export default function App() {
       setProducts((prev) =>
         prev.map((p) => (p.id === editingProduct.id ? { ...p, ...productData } : p))
       );
-      showToast(`Produit "${productData.name}" mis à jour !`, 'success');
-    } else {
-      const newProduct: ProductItem = {
+      showToast(t.productUpdated(productData.name), 'success');`
         ...productData,
         id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         createdAt: new Date().toISOString(),
       };
       setProducts((prev) => [newProduct, ...prev]);
       showToast(`Produit "${productData.name}" enregistré avec succès !`, 'success');
+    }
+    setIsConfirmationOpen(false);
     }
     setIsConfirmationOpen(false);
     setEditingProduct(null);
@@ -236,7 +237,7 @@ export default function App() {
   const handleResetData = () => {
     setProducts(INITIAL_PRODUCTS);
     setIsStatsOpen(false);
-    showToast('Données réinitialisées avec succès.', 'info');
+    showToast(t.dataReset, 'info');
   };
 
   // Actions: Restore a consumed or discarded product back to active
@@ -244,7 +245,7 @@ export default function App() {
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: 'active', resolvedAt: undefined } : p))
     );
-    showToast('Produit restauré dans votre stock actif.', 'info');
+    showToast(t.productRestored, 'info');
   };
 
   return (
@@ -276,10 +277,10 @@ export default function App() {
         <div className="flex items-center justify-between mt-5 mb-3 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-stone-500" />
-            <span>Aliments triés par date la plus proche</span>
+            <span>{t.sortedByDate}</span>
           </h2>
           <span className="text-xs text-stone-400 font-medium">
-            {displayedProducts.length} {displayedProducts.length > 1 ? 'articles' : 'article'}
+            {displayedProducts.length > 1 ? t.articles : t.article}
           </span>
         </div>
 
@@ -293,12 +294,12 @@ export default function App() {
               <h3 className="text-base font-bold text-stone-900">
                 {searchQuery || activeFilter !== 'all'
                   ? 'Aucun produit ne correspond aux filtres'
-                  : 'Votre frigo et placards sont vides'}
+                  : t.emptyFridge}
               </h3>
               <p className="text-xs text-stone-500 max-w-sm mx-auto mt-1">
                 {searchQuery || activeFilter !== 'all'
-                  ? 'Essayez de modifier votre terme de recherche ou de réinitialiser le filtre.'
-                  : 'Appuyez sur le bouton "+" pour prendre en photo un emballage alimentaire. L’IA Gemini extraira automatiquement la date !'}
+                  ? 't.tryDifferentSearch'
+                  : 't.emptyStateHint. L’IA Gemini extraira automatiquement la date !'}
               </p>
             </div>
             <div className="pt-2 flex justify-center gap-2">
@@ -308,14 +309,14 @@ export default function App() {
                 className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition-all shadow-sm"
               >
                 <Camera className="w-4 h-4" />
-                Scanner un emballage
+                {t.scanPackage}
               </button>
               <button
                 id="btn-empty-manual"
                 onClick={handleManualAdd}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-stone-100 text-stone-700 text-xs font-semibold hover:bg-stone-200 transition-all"
               >
-                Ajout manuel
+                {t.manualAdd}
               </button>
             </div>
           </div>
@@ -343,7 +344,7 @@ export default function App() {
           title="Ajout rapide manuel"
           className="hidden sm:flex items-center gap-1.5 px-3.5 py-3 rounded-full bg-white text-stone-700 hover:text-stone-900 font-bold text-xs shadow-lg shadow-stone-900/10 border border-stone-200 hover:bg-stone-50 active:scale-95 transition-all"
         >
-          <span>Saisie rapide</span>
+          <span>{t.quickEntry}</span>
         </button>
 
         {/* Main Floating Action Button (FAB) */}
@@ -354,8 +355,8 @@ export default function App() {
           className="group relative flex items-center gap-2 px-4 py-3.5 sm:px-5 sm:py-4 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-xl shadow-emerald-950/20 active:scale-95 transition-all"
         >
           <Camera className="w-5 h-5 transition-transform group-hover:scale-110" />
-          <span className="font-extrabold tracking-tight">Scanner emballage</span>
-          <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs">
+          <span className="font-extrabold tracking-tight">{t.scanButton}</span>
+                   <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs">
             +
           </span>
         </button>

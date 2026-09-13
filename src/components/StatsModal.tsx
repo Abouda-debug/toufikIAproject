@@ -253,7 +253,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
-              Sauvegarde JSON
+              Exporter mes données
             </button>
 
             <button
