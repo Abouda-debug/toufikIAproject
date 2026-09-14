@@ -45,8 +45,9 @@ import { ProductConfirmationModal } from './components/ProductConfirmationModal'
 import { NotificationsModal } from './components/NotificationsModal';
 import { StatsModal } from './components/StatsModal';
 import { useTranslations } from './i18n';
-const { t } = useTranslations();
+
 export default function App() {
+  const { t } = useTranslations();
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   const [activeFilter, setActiveFilter] = useState<'all' | 'urgent' | 'warning' | 'safe'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -293,13 +294,13 @@ export default function App() {
             <div>
               <h3 className="text-base font-bold text-stone-900">
                 {searchQuery || activeFilter !== 'all'
-                  ? 'Aucun produit ne correspond aux filtres'
+                  ? t.noMatchFilter
                   : t.emptyFridge}
               </h3>
               <p className="text-xs text-stone-500 max-w-sm mx-auto mt-1">
                 {searchQuery || activeFilter !== 'all'
-                 ? t.tryDifferentSearch
-: t.emptyStateHint}
+                  ? t.tryDifferentSearch
+                  : t.emptyStateHint}
               </p>
             </div>
             <div className="pt-2 flex justify-center gap-2">
