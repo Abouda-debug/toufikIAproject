@@ -1,11 +1,14 @@
 import { ExpirationUrgency } from '../types';
+import { translations } from '../i18n';
+
+type Lang = 'fr' | 'en';
 
 /**
  * Normalise une date à minuit UTC pour des comparaisons de jours fiables
  */
 export function getDaysDifference(targetDateStr: string): number {
   if (!targetDateStr) return 0;
-  
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -31,7 +34,8 @@ export function getExpirationUrgency(targetDateStr: string): ExpirationUrgency {
   return 'safe';
 }
 
-export function getUrgencyStyles(urgency: ExpirationUrgency) {
+export function getUrgencyStyles(urgency: ExpirationUrgency, lang: Lang = 'fr') {
+  const u = translations[lang].urgency;
   switch (urgency) {
     case 'expired':
       return {
@@ -39,7 +43,7 @@ export function getUrgencyStyles(urgency: ExpirationUrgency) {
         cardBorder: 'border-l-4 border-l-rose-600',
         dotColor: 'bg-rose-600',
         accentColor: '#E11D48',
-        label: 'Périmé',
+        label: u.expiredLabel,
         textClass: 'text-rose-700 font-bold',
       };
     case 'urgent':
@@ -48,7 +52,7 @@ export function getUrgencyStyles(urgency: ExpirationUrgency) {
         cardBorder: 'border-l-4 border-l-red-500',
         dotColor: 'bg-red-500',
         accentColor: '#EF4444',
-        label: 'Urgent (≤ 2 jours)',
+        label: u.urgentLabel,
         textClass: 'text-red-700 font-semibold',
       };
     case 'warning':
@@ -57,7 +61,7 @@ export function getUrgencyStyles(urgency: ExpirationUrgency) {
         cardBorder: 'border-l-4 border-l-amber-500',
         dotColor: 'bg-amber-500',
         accentColor: '#F59E0B',
-        label: 'À surveiller (≤ 7 jours)',
+        label: u.warningLabel,
         textClass: 'text-amber-700 font-medium',
       };
     case 'safe':
@@ -67,29 +71,34 @@ export function getUrgencyStyles(urgency: ExpirationUrgency) {
         cardBorder: 'border-l-4 border-l-emerald-500',
         dotColor: 'bg-emerald-500',
         accentColor: '#10B981',
-        label: 'Frais (> 7 jours)',
+        label: u.safeLabel,
         textClass: 'text-emerald-700 font-medium',
       };
   }
 }
 
-export function formatDaysRemainingText(targetDateStr: string): string {
+export function formatDaysRemainingText(targetDateStr: string, lang: Lang = 'fr'): string {
   const days = getDaysDifference(targetDateStr);
+  const u = translations[lang].urgency;
 
-  if (days < -1) return `Périmé depuis ${Math.abs(days)} jours`;
-  if (days === -1) return 'Périmé hier';
-  if (days === 0) return "Expire aujourd'hui !";
-  if (days === 1) return 'Expire demain';
-  if (days === 2) return 'Expire dans 2 jours';
-  return `Expire dans ${days} jours`;
+  if (days < -1) return u.expiredSince(Math.abs(days));
+  if (days === -1) return u.expiredYesterday;
+  if (days === 0) return u.expiresToday;
+  if (days === 1) return u.expiresTomorrow;
+  return u.expiresInDays(days);
 }
 
-export function formatDateFrench(dateStr: string): string {
+const DATE_LOCALES: Record<Lang, string> = {
+  fr: 'fr-FR',
+  en: 'en-US',
+};
+
+export function formatDateFrench(dateStr: string, lang: Lang = 'fr'): string {
   if (!dateStr) return '';
   try {
     const [year, month, day] = dateStr.split('-').map(Number);
     const date = new Date(year, month - 1, day);
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat(DATE_LOCALES[lang], {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

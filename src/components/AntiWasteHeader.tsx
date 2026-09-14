@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, Search, Flame, Clock, CheckCircle2, Layers } from 'lucide-react';
 import { AntiWasteStats } from '../types';
+import { useTranslations } from '../i18n';
 
 interface AntiWasteHeaderProps {
   stats: AntiWasteStats;
@@ -25,6 +26,9 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
   searchQuery,
   onSearchChange,
 }) => {
+  const { t } = useTranslations();
+  const h = t.header;
+
   return (
     <div className="space-y-4 pt-2 pb-1">
       {/* Hero Counter Card: Articles sauvés du gaspillage */}
@@ -40,7 +44,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-200 text-[11px] font-semibold border border-emerald-500/30">
                 <Sparkles className="w-3 h-3 text-emerald-300" />
-                Impact écologique
+                {h.ecoImpact}
               </span>
             </div>
             <div className="flex items-baseline gap-2">
@@ -48,13 +52,13 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
                 {stats.totalSaved}
               </span>
               <span className="text-sm font-semibold text-emerald-100">
-                {stats.totalSaved > 1 ? 'articles sauvés' : 'article sauvé'} du gaspillage
+                {stats.totalSaved > 1 ? h.itemsSaved : h.itemSaved} {h.wastageSuffix}
               </span>
             </div>
             <p className="text-xs text-emerald-200/90 mt-1">
               {stats.totalSaved > 0
-                ? `Taux de réussite : ${stats.savedPercentage}% • Économies estimées : ~${stats.estimatedMoneySaved.toFixed(2)} €`
-                : 'Scannez vos produits pour éviter qu’ils ne finissent à la poubelle.'}
+                ? h.successRateLine(stats.savedPercentage, stats.estimatedMoneySaved.toFixed(2))
+                : h.scanCta}
             </p>
           </div>
 
@@ -64,7 +68,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
                 {totalActiveCount}
               </span>
               <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-200">
-                En stock
+                {h.inStock}
               </span>
             </div>
             <div className="px-3.5 py-2 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-center">
@@ -72,7 +76,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
                 {urgentCount}
               </span>
               <span className="text-[10px] uppercase font-bold tracking-wider text-red-200">
-                Urgents
+                {h.urgent}
               </span>
             </div>
           </div>
@@ -87,7 +91,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Rechercher un produit, une marque, un rayon..."
+          placeholder={h.searchPlaceholder}
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-2xl text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 shadow-2xs"
         />
         {searchQuery && (
@@ -95,7 +99,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
             onClick={() => onSearchChange('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 hover:text-stone-600 p-1"
           >
-            Effacer
+            {h.clear}
           </button>
         )}
       </div>
@@ -113,7 +117,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>Tous ({totalActiveCount})</span>
+          <span>{h.filterAll} ({totalActiveCount})</span>
         </button>
 
         {/* Rouge : Expire sous 2 jours */}
@@ -128,7 +132,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
         >
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           <Flame className="w-3.5 h-3.5" />
-          <span>≤ 2 jours ({urgentCount})</span>
+          <span>{h.filterUrgent} ({urgentCount})</span>
         </button>
 
         {/* Orange : Sous 7 jours */}
@@ -143,7 +147,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
         >
           <span className="w-2 h-2 rounded-full bg-amber-500" />
           <Clock className="w-3.5 h-3.5" />
-          <span>3-7 jours ({warningCount})</span>
+          <span>{h.filterWarning} ({warningCount})</span>
         </button>
 
         {/* Vert : Plus de 7 jours */}
@@ -158,7 +162,7 @@ export const AntiWasteHeader: React.FC<AntiWasteHeaderProps> = ({
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>&gt; 7 jours ({safeCount})</span>
+          <span>{h.filterSafe} ({safeCount})</span>
         </button>
       </div>
     </div>

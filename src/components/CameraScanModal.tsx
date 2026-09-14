@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { SAMPLE_PACKAGES, SamplePackaging } from '../data/samplePackages';
 import { ExtractedProductData } from '../types';
+import { useTranslations } from '../i18n';
 
 interface CameraScanModalProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
   onScanComplete,
   onManualAdd,
 }) => {
+  const { t } = useTranslations();
+  const c = t.cameraScan;
   const [cameraActive, setCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
   // Auto-scan states
   const [autoScanEnabled, setAutoScanEnabled] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [scanStatus, setScanStatus] = useState<string>('Alignez la date dans le cadre');
+  const [scanStatus, setScanStatus] = useState<string>(c.alignHint);
   const [detectedDate, setDetectedDate] = useState<string | null>(null);
   const [scanPulse, setScanPulse] = useState(false);
   const [networkError, setNetworkError] = useState<string | null>(null);
@@ -80,7 +83,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
     setCameraError(null);
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError("L'accès à la caméra n'est pas pris en charge par ce navigateur.");
+      setCameraError(c.errorNotSupported);
       setCameraActive(false);
       return;
     }
@@ -142,16 +145,16 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
 
     if (!activeStream) {
       console.error('Toutes les tentatives caméra ont échoué:', lastError);
-      let message = "Impossible d'accéder à la webcam de votre ordinateur.";
+      let message = c.errorGeneric;
       if (lastError) {
         if (lastError.name === 'NotAllowedError' || lastError.name === 'PermissionDeniedError') {
-          message = "Accès à la caméra refusé. Cliquez sur l'icône de caméra/cadenas dans la barre d'adresse du navigateur pour autoriser la webcam.";
+          message = c.errorPermissionDenied;
         } else if (lastError.name === 'NotFoundError' || lastError.name === 'DevicesNotFoundError') {
-          message = "Aucune webcam détectée sur cet ordinateur. Vérifiez que la caméra est branchée ou active.";
+          message = c.errorNotFound;
         } else if (lastError.name === 'NotReadableError' || lastError.name === 'TrackStartError') {
-          message = "La webcam est déjà utilisée par une autre application (Zoom, Teams, etc.). Veuillez la fermer puis réessayer.";
+          message = c.errorDeviceBusy;
         } else if (lastError.name === 'OverconstrainedError') {
-          message = "La résolution demandée n'est pas supportée par cette webcam.";
+          message = c.errorOverconstrained;
         }
       }
       setCameraError(message);
@@ -245,7 +248,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
       isAnalyzingRef.current = true;
       setIsAnalyzing(true);
       setScanPulse(true);
-      setScanStatus('Lecture de la date par Gemini...');
+      setScanStatus(c.readingByGemini);
 
       try {
         const response = await fetch('/api/scan-product', {
@@ -263,7 +266,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
 
         if (!response.ok || !result.success) {
           throw new Error(
-            result.error || 'Erreur lors de la communication avec le service Gemini.'
+            result.error || c.errorCommunication
           );
         }
 
@@ -280,7 +283,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
         if (hasDate || isManual) {
           if (hasDate) {
             setDetectedDate(data.date_peremption);
-            setScanStatus(`Date détectée : ${data.date_peremption} !`);
+            setScanStatus(c.dateDetected(data.date_peremption));
             try {
               if (navigator.vibrate) navigator.vibrate(100);
             } catch {
@@ -306,7 +309,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
             brand: data.nom_produit?.split(' ')[0] || '',
             confidence: confidenceScore,
             rawDateText: data.date_peremption || undefined,
-            error: data.erreur || (!data.date_peremption ? 'Aucune date de péremption lisible sur la photo' : undefined),
+            error: data.erreur || (!data.date_peremption ? c.errorNoDate : undefined),
           };
 
           setTimeout(() => {
@@ -320,14 +323,14 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
         if (!isManual && consecutiveScansRef.current >= 3) {
           stopAutoScan();
           setAutoScanEnabled(false);
-          setScanStatus("Cadrez la date et cliquez sur 'Capturer'");
+          setScanStatus(c.manualCaptureHint);
           return;
         }
 
         setScanStatus(
           consecutiveScansRef.current % 2 === 0
-            ? 'Recherche de date (DLC/DDM) en direct...'
-            : 'Rapprochez ou stabilisez l’emballage...'
+            ? c.searchingLive
+            : c.stabilizeHint
         );
       } catch (err: any) {
         console.warn('Scan frame warning:', err);
@@ -343,7 +346,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
             category: 'frais',
             storageLocation: 'frigo',
             confidence: 0,
-            error: "Service IA momentanément limité. Vérifiez et confirmez la date manuellement à l'aide de la photo.",
+            error: c.errorAiLimited,
           };
           stopCamera();
           onScanComplete(extracted, imageBase64);
@@ -415,10 +418,10 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
   const formatFriendlyError = (err: string | null): string => {
     if (!err) return '';
     if (err.includes('429') || err.includes('RESOURCE_EXHAUSTED') || err.includes('quota')) {
-      return "Quota d'analyse temporairement atteint. Complétez la date manuellement à l'aide de la photo.";
+      return c.errorQuota;
     }
     if (err.includes('503') || err.includes('high demand') || err.includes('UNAVAILABLE')) {
-      return "Les serveurs Gemini subissent une forte affluence temporaire (erreur 503). Réessayez dans un instant ou poursuivez en saisie assistée.";
+      return c.errorOverloaded;
     }
     return err;
   };
@@ -436,16 +439,17 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-stone-900 font-['Plus_Jakarta_Sans',sans-serif]">
-                Détection automatique de date
+                {c.title}
               </h2>
               <p className="text-xs text-stone-500">
-                Webcam PC ou smartphone : présentez l'emballage sans cliquer
+                {c.subtitle}
               </p>
             </div>
           </div>
           <button
             id="btn-close-camera"
             onClick={onClose}
+            aria-label={c.closeAria}
             className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -476,12 +480,12 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                   }`}
                 />
                 {detectedDate
-                  ? 'Date reconnue !'
+                  ? c.statusRecognized
                   : cameraActive
                   ? autoScanEnabled
-                    ? 'Lecture en direct active'
-                    : 'Mode manuel'
-                  : 'Webcam en attente'}
+                    ? c.statusLiveActive
+                    : c.statusManualMode
+                  : c.statusWaiting}
               </span>
             </div>
 
@@ -500,7 +504,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                   >
                     {availableDevices.map((dev, idx) => (
                       <option key={dev.deviceId || idx} value={dev.deviceId}>
-                        {dev.label || `Caméra ${idx + 1}`}
+                        {dev.label || c.cameraOptionLabel(idx + 1)}
                       </option>
                     ))}
                   </select>
@@ -517,7 +521,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                     autoScanEnabled ? 'text-amber-500 fill-amber-500' : 'text-stone-400'
                   }`}
                 />
-                <span>{autoScanEnabled ? 'Auto : ON' : 'Auto : OFF'}</span>
+                <span>{autoScanEnabled ? c.autoOn : c.autoOff}</span>
               </button>
             </div>
           </div>
@@ -570,7 +574,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                   <div className="flex justify-between items-center text-[10px] text-stone-200">
                     <div className="w-3 h-3 border-b-2 border-l-2 border-emerald-300" />
                     <span className="bg-black/50 px-2 py-0.5 rounded backdrop-blur-xs">
-                      DLC, DLUO ou DDM
+                      {c.viewfinderHint}
                     </span>
                     <div className="w-3 h-3 border-b-2 border-r-2 border-emerald-300" />
                   </div>
@@ -582,12 +586,12 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                     <div className="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-2 shadow-lg animate-bounce">
                       <CheckCircle2 className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-black tracking-tight">Date reconnue !</h3>
+                    <h3 className="text-lg font-black tracking-tight">{c.recognizedTitle}</h3>
                     <p className="text-xl font-extrabold text-emerald-300 mt-1 font-mono">
                       {detectedDate}
                     </p>
                     <p className="text-xs text-stone-300 mt-1">
-                      Ouverture automatique de la confirmation...
+                      {c.openingConfirmation}
                     </p>
                   </div>
                 )}
@@ -596,7 +600,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                 <button
                   id="btn-toggle-camera"
                   onClick={toggleFacingMode}
-                  title="Changer de caméra"
+                  title={c.toggleCameraTitle}
                   className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors shadow"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -606,7 +610,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
               <div className="p-6 text-center text-stone-300 space-y-3 max-w-sm">
                 <Camera className="w-12 h-12 mx-auto text-stone-500 stroke-1" />
                 <p className="text-sm font-medium text-stone-200">
-                  {cameraError || 'Connexion à la webcam du PC en cours...'}
+                  {cameraError || c.connectingWebcam}
                 </p>
 
                 <div className="flex flex-col gap-2 pt-1">
@@ -616,17 +620,17 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                     className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-colors"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    Réessayer d'activer la webcam
+                    {c.retryWebcam}
                   </button>
 
                   <button
                     id="btn-open-new-tab"
                     onClick={handleOpenInNewTab}
                     className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium border border-stone-700 transition-colors"
-                    title="Si l'aperçu dans l'iframe bloque la caméra de votre navigateur"
+                    title={c.openNewTabTitle}
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    Ouvrir dans un nouvel onglet (sans iframe)
+                    {c.openNewTab}
                   </button>
                 </div>
               </div>
@@ -637,7 +641,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
           <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 text-emerald-950 text-xs flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-700 shrink-0" />
             <p className="text-[11px] leading-tight text-emerald-900">
-              <strong>Zéro clic requis :</strong> Présentez la date imprimée (ex: 24/09/2026) devant la webcam. L'API Gemini lit et valide automatiquement dès qu'elle est nette.
+              <strong>{c.zeroClickTitle}</strong> {c.zeroClickBody('24/09/2026')}
             </p>
           </div>
 
@@ -646,7 +650,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
             <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="font-bold">Service IA</p>
+                <p className="font-bold">{c.aiServiceTitle}</p>
                 <p className="text-amber-800">{formatFriendlyError(networkError)}</p>
                 <button
                   id="btn-fallback-manual-add"
@@ -656,7 +660,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                   }}
                   className="mt-1 inline-flex items-center gap-1 font-bold text-emerald-700 underline"
                 >
-                  Continuer en saisie manuelle →
+                  {c.continueManual}
                 </button>
               </div>
             </div>
@@ -670,10 +674,10 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
                 disabled={isAnalyzing}
                 onClick={handleManualCapture}
                 className="flex-1 py-2.5 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors border border-stone-200"
-                title="Déclencher manuellement si la luminosité est faible"
+                title={c.captureManualTitle}
               >
                 <Camera className="w-3.5 h-3.5 text-stone-600" />
-                <span>Capturer manuellement</span>
+                <span>{c.captureManual}</span>
               </button>
             )}
 
@@ -684,7 +688,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
               className="flex-1 py-2.5 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-stone-200"
             >
               <Upload className="w-3.5 h-3.5 text-stone-600" />
-              <span>Importer une photo</span>
+              <span>{c.uploadPhoto}</span>
             </button>
             <input
               ref={fileInputRef}
@@ -700,9 +704,9 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-stone-700 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                Tester avec un exemple pré-chargé :
+                {c.sampleSectionTitle}
               </span>
-              <span className="text-[10px] text-stone-400">Simulation instantanée</span>
+              <span className="text-[10px] text-stone-400">{c.sampleSectionHint}</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SAMPLE_PACKAGES.map((sample) => (
@@ -729,7 +733,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
 
         {/* Footer: Saisie manuelle directe */}
         <div className="p-3.5 bg-stone-50 border-t border-stone-100 flex items-center justify-between text-xs">
-          <span className="text-stone-500">Webcam non disponible ?</span>
+          <span className="text-stone-500">{c.footerNoWebcam}</span>
           <button
             id="btn-switch-manual"
             onClick={() => {
@@ -738,7 +742,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
             }}
             className="font-bold text-emerald-700 hover:text-emerald-900 underline"
           >
-            Saisie manuelle directe
+            {c.footerManualEntry}
           </button>
         </div>
       </div>

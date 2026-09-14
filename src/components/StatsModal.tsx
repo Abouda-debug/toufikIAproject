@@ -15,6 +15,7 @@ import { ProductItem, AntiWasteStats } from '../types';
 import { formatDateFrench } from '../utils/dateUtils';
 import { CATEGORY_PRICE_RATES, getProductEstimatedPrice } from '../data/productStorage';
 import { Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslations } from '../i18n';
 
 interface StatsModalProps {
   isOpen: boolean;
@@ -33,6 +34,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({
   onResetData,
   onRestoreProduct,
 }) => {
+  const { t, lang } = useTranslations();
+  const s = t.stats;
   const [showPriceRates, setShowPriceRates] = useState(false);
 
   if (!isOpen) return null;
@@ -62,10 +65,10 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-stone-900 font-['Plus_Jakarta_Sans',sans-serif]">
-                Bilan Anti-Gaspillage
+                {s.title}
               </h2>
               <p className="text-xs text-stone-500">
-                Statistiques & historique des aliments
+                {s.subtitle}
               </p>
             </div>
           </div>
@@ -85,52 +88,52 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80">
               <div className="flex items-center gap-1.5 text-emerald-700 text-xs font-bold mb-1">
                 <Utensils className="w-4 h-4" />
-                <span>Articles sauvés</span>
+                <span>{s.savedItems}</span>
               </div>
               <div className="text-3xl font-black text-emerald-950 font-['Plus_Jakarta_Sans',sans-serif]">
                 {stats.totalSaved}
               </div>
               <p className="text-[11px] text-emerald-700/90 mt-0.5">
-                Consommés avant la date
+                {s.savedItemsHint}
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200">
               <div className="flex items-center gap-1.5 text-stone-600 text-xs font-bold mb-1">
                 <Euro className="w-4 h-4 text-emerald-600" />
-                <span>Économies estimées</span>
+                <span>{s.estimatedSavings}</span>
               </div>
               <div className="text-3xl font-black text-stone-900 font-['Plus_Jakarta_Sans',sans-serif]">
                 ~{stats.estimatedMoneySaved.toFixed(2)} €
               </div>
               <p className="text-[11px] text-emerald-700 font-medium mt-0.5">
-                Barème ADEME par catégorie
+                {s.estimatedSavingsHint}
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200">
               <div className="flex items-center gap-1.5 text-stone-600 text-xs font-bold mb-1">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>Taux de sauvetage</span>
+                <span>{s.saveRate}</span>
               </div>
               <div className="text-3xl font-black text-stone-900 font-['Plus_Jakarta_Sans',sans-serif]">
                 {stats.savedPercentage}%
               </div>
               <p className="text-[11px] text-stone-500 mt-0.5">
-                Ratio consommés vs jetés
+                {s.saveRateHint}
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200/80">
               <div className="flex items-center gap-1.5 text-rose-700 text-xs font-bold mb-1">
                 <Trash2 className="w-4 h-4" />
-                <span>Articles jetés</span>
+                <span>{s.discardedItems}</span>
               </div>
               <div className="text-3xl font-black text-rose-950 font-['Plus_Jakarta_Sans',sans-serif]">
                 {stats.totalDiscarded}
               </div>
               <p className="text-[11px] text-rose-700/90 mt-0.5">
-                Non consommés à temps
+                {s.discardedItemsHint}
               </p>
             </div>
           </div>
@@ -143,7 +146,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             >
               <div className="flex items-center gap-2">
                 <Info className="w-4 h-4 text-emerald-700 shrink-0" />
-                <span>Comment sont calculés ces tarifs ? (Option A)</span>
+                <span>{s.priceRatesToggle}</span>
               </div>
               {showPriceRates ? (
                 <ChevronUp className="w-4 h-4 text-emerald-700" />
@@ -153,7 +156,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             </button>
 
             <p className="text-stone-600 mt-1.5 leading-relaxed text-[11px]">
-              Puisque les emballages ne comportent pas de prix imprimé, l'application applique automatiquement le <strong>barème moyen officiel (INSEE / ADEME anti-gaspillage)</strong> dès qu'un produit est consommé :
+              {s.priceRatesExplanation}
             </p>
 
             {showPriceRates && (
@@ -165,7 +168,9 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                       key={key}
                       className="p-2 rounded-xl bg-white/80 border border-emerald-100 flex items-center justify-between"
                     >
-                      <span className="text-stone-700 font-medium truncate">{item.label}</span>
+                      <span className="text-stone-700 font-medium truncate">
+                        {t.categories[key as keyof typeof t.categories] || item.label}
+                      </span>
                       <span className="font-bold text-emerald-800 shrink-0 ml-1">
                         {item.price.toFixed(2)} €
                       </span>
@@ -180,11 +185,10 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold text-stone-900">
-                Application payante à l'achat — 100% débloquée
+                {s.paidBannerTitle}
               </p>
               <p className="text-stone-600 mt-0.5">
-                Aucune publicité, aucun abonnement, aucun compte requis.
-                Toutes les données sont stockées localement sur votre appareil en toute confidentialité.
+                {s.paidBannerBody}
               </p>
             </div>
           </div>
@@ -192,12 +196,12 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           {/* Historical List */}
           <div>
             <h3 className="text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
-              Historique des actions ({resolvedProducts.length})
+              {s.historyTitle(resolvedProducts.length)}
             </h3>
 
             {resolvedProducts.length === 0 ? (
               <div className="p-6 text-center text-stone-400 text-xs bg-stone-50 rounded-2xl border border-stone-200">
-                Aucun produit terminé pour le moment. Glissez vos produits vers la droite pour les marquer "Consommé" !
+                {s.historyEmpty}
               </div>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -221,13 +225,13 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                           {p.name}
                         </span>
                         <span className="text-[10px] text-stone-500">
-                          Date : {formatDateFrench(p.expirationDate)} •{' '}
+                          {s.dateLabel} : {formatDateFrench(p.expirationDate, lang)} •{' '}
                           {p.status === 'consumed' ? (
                             <span className="font-semibold text-emerald-700">
-                              +{(getProductEstimatedPrice(p.category) * (p.quantity || 1)).toFixed(2)} € sauvés
+                              +{(getProductEstimatedPrice(p.category) * (p.quantity || 1)).toFixed(2)} € {s.savedSuffix}
                             </span>
                           ) : (
-                            <span className="font-semibold text-rose-600">Non consommé</span>
+                            <span className="font-semibold text-rose-600">{s.notConsumed}</span>
                           )}
                         </span>
                       </div>
@@ -237,7 +241,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                       onClick={() => onRestoreProduct(p.id)}
                       className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 px-2 py-1 rounded-md hover:bg-emerald-50 shrink-0"
                     >
-                      Restaurer
+                      {s.restore}
                     </button>
                   </div>
                 ))}
@@ -253,20 +257,20 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
-              Exporter mes données
+              {s.exportData}
             </button>
 
             <button
               id="btn-reset-demo-data"
               onClick={() => {
-                if (confirm('Réinitialiser les données avec les exemples par défaut ?')) {
+                if (confirm(s.resetConfirm)) {
                   onResetData();
                 }
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 text-xs font-semibold transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Réinitialiser
+              {s.resetData}
             </button>
           </div>
         </div>
@@ -277,7 +281,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold hover:bg-stone-800"
           >
-            Fermer
+            {s.close}
           </button>
         </div>
       </div>

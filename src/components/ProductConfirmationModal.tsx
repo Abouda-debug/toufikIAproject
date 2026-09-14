@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ProductItem, ExtractedProductData, ProductCategory, StorageLocation, DateType } from '../types';
 import { getExpirationUrgency, getUrgencyStyles, getDaysDifference, formatDateFrench } from '../utils/dateUtils';
+import { useTranslations } from '../i18n';
 
 interface ProductConfirmationModalProps {
   isOpen: boolean;
@@ -25,18 +26,18 @@ interface ProductConfirmationModalProps {
   imagePreview?: string;
 }
 
-const CATEGORIES: { id: ProductCategory; label: string }[] = [
-  { id: 'frais', label: 'Frais (Yaourts, Viandes, Légumes...)' },
-  { id: 'sec', label: 'Sec (Pâtes, Riz, Conserves...)' },
-  { id: 'surgele', label: 'Surgelé (Plats, Glaces...)' },
-  { id: 'boisson', label: 'Boisson (Jus, Lait, Sodas...)' },
-  { id: 'autre', label: 'Autre' },
-  { id: 'cremerie', label: 'Crèmerie & Produits laitiers' },
-  { id: 'viande_poisson', label: 'Viandes & Poissons' },
-  { id: 'fruits_legumes', label: 'Fruits & Légumes' },
-  { id: 'plats_prepares', label: 'Plats préparés & Traiteur' },
-  { id: 'epicerie', label: 'Épicerie' },
-  { id: 'surgeles', label: 'Surgelés' },
+const CATEGORY_IDS: ProductCategory[] = [
+  'frais',
+  'sec',
+  'surgele',
+  'boisson',
+  'autre',
+  'cremerie',
+  'viande_poisson',
+  'fruits_legumes',
+  'plats_prepares',
+  'epicerie',
+  'surgeles',
 ];
 
 export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> = ({
@@ -48,6 +49,9 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
   onRetakePhoto,
   imagePreview,
 }) => {
+  const { t, lang } = useTranslations();
+  const f = t.confirmation;
+  const CATEGORIES = CATEGORY_IDS.map((id) => ({ id, label: t.categories[id] }));
   const [name, setName] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
   const [dateType, setDateType] = useState<DateType>('DLC');
@@ -80,7 +84,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
       setStorageLocation(initialData.storageLocation || 'frigo');
       setBrand(initialData.brand || '');
       setQuantity(1);
-      setNotes(initialData.rawDateText ? `Date lue sur l'emballage : "${initialData.rawDateText}"` : '');
+      setNotes(initialData.rawDateText ? f.readOnPackage(initialData.rawDateText) : '');
     } else {
       // Formulaire vide
       setName('');
@@ -120,7 +124,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
   };
 
   const urgency = expirationDate ? getExpirationUrgency(expirationDate) : 'safe';
-  const urgencyStyles = getUrgencyStyles(urgency);
+  const urgencyStyles = getUrgencyStyles(urgency, lang);
   const daysDiff = expirationDate ? getDaysDifference(expirationDate) : 0;
 
   return (
@@ -134,10 +138,10 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
             </div>
             <div>
               <h2 className="text-base font-bold text-stone-900 font-['Plus_Jakarta_Sans',sans-serif]">
-                {editingProduct ? 'Modifier le produit' : 'Confirmation du produit'}
+                {editingProduct ? f.titleEdit : f.titleConfirm}
               </h2>
               <p className="text-xs text-stone-500">
-                {editingProduct ? 'Ajustez les détails ou la date' : 'Vérifiez les données extraites avant d’enregistrer'}
+                {editingProduct ? f.subtitleEdit : f.subtitleConfirm}
               </p>
             </div>
           </div>
@@ -162,13 +166,10 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                 <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="flex-1 text-xs">
                   <p className="font-bold text-amber-950 text-sm">
-                    Vérification recommandée
+                    {f.verificationRecommended}
                   </p>
                   <p className="text-amber-800 mt-0.5">
-                    {initialData?.error ||
-                      `La date de péremption est incertaine (indice de confiance : ${Math.round(
-                        confidence * 100
-                      )}%). Veuillez contrôler la date ci-dessous ou reprendre la photo.`}
+                    {initialData?.error || f.lowConfidenceGeneric(Math.round(confidence * 100))}
                   </p>
                 </div>
               </div>
@@ -182,7 +183,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-2xs"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    Reprendre la photo
+                    {f.retakePhoto}
                   </button>
                 </div>
               )}
@@ -194,11 +195,11 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
             <div className="relative rounded-2xl overflow-hidden border border-stone-200 bg-stone-50 max-h-36 flex items-center justify-center">
               <img
                 src={imagePreview}
-                alt="Aperçu emballage scanné"
+                alt={f.scannedPackageAlt}
                 className="w-full h-36 object-contain"
               />
               <span className="absolute bottom-2 left-2 text-[10px] font-bold bg-black/70 text-white px-2 py-0.5 rounded-full">
-                Emballage scanné
+                {f.scannedPackage}
               </span>
             </div>
           )}
@@ -206,7 +207,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
           {/* Champ 1 : Nom du produit */}
           <div>
             <label htmlFor="input-product-name" className="block text-xs font-bold text-stone-700 mb-1">
-              Nom de l'aliment *
+              {f.nameLabel}
             </label>
             <input
               id="input-product-name"
@@ -214,7 +215,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ex. Yaourt nature, Jambon supérieur..."
+              placeholder={f.namePlaceholder}
               className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-2xl text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600"
             />
           </div>
@@ -224,7 +225,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
             <div className="flex items-center justify-between">
               <label htmlFor="input-expiration-date" className="text-xs font-bold text-stone-700 flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-stone-500" />
-                Date de péremption (DLC / DDM) *
+                {f.expirationLabel}
               </label>
               {/* Badge code couleur dynamique */}
               <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${urgencyStyles.badgeBg}`}>
@@ -253,9 +254,9 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                       ? 'bg-white text-stone-900 shadow-2xs'
                       : 'text-stone-500 hover:text-stone-800'
                   }`}
-                  title="Date Limite de Consommation impérative"
+                  title={f.dlcTitle}
                 >
-                  DLC (Impératif)
+                  {f.dlcOption}
                 </button>
                 <button
                   type="button"
@@ -266,9 +267,9 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                       ? 'bg-white text-stone-900 shadow-2xs'
                       : 'text-stone-500 hover:text-stone-800'
                   }`}
-                  title="Date de Durabilité Minimale de préférence"
+                  title={f.ddmTitle}
                 >
-                  DDM (De préférence)
+                  {f.ddmOption}
                 </button>
               </div>
             </div>
@@ -278,10 +279,10 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                 <Clock className="w-3.5 h-3.5 text-stone-400" />
                 <span>
                   {daysDiff === 0
-                    ? "Attention : expire aujourd'hui !"
+                    ? f.expiresToday
                     : daysDiff > 0
-                    ? `Expire dans ${daysDiff} jours (${formatDateFrench(expirationDate)})`
-                    : `Attention : déjà périmé depuis ${Math.abs(daysDiff)} jours`}
+                    ? f.expiresInDays(daysDiff, formatDateFrench(expirationDate, lang))
+                    : f.expiredSince(Math.abs(daysDiff))}
                 </span>
               </p>
             )}
@@ -290,7 +291,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
           {/* Emplacement de stockage : Frigo, Placard, Congélateur */}
           <div>
             <label className="block text-xs font-bold text-stone-700 mb-1.5">
-              Où est rangé le produit ?
+              {f.storageQuestion}
             </label>
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -304,7 +305,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                 }`}
               >
                 <Refrigerator className="w-4 h-4 text-blue-600" />
-                <span>Frigo</span>
+                <span>{t.storageLocations.frigo}</span>
               </button>
 
               <button
@@ -318,7 +319,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                 }`}
               >
                 <Package className="w-4 h-4 text-amber-600" />
-                <span>Placard</span>
+                <span>{t.storageLocations.placard}</span>
               </button>
 
               <button
@@ -332,7 +333,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
                 }`}
               >
                 <Snowflake className="w-4 h-4 text-cyan-600" />
-                <span>Congélateur</span>
+                <span>{t.storageLocations.congelateur}</span>
               </button>
             </div>
           </div>
@@ -341,7 +342,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="select-category" className="block text-xs font-bold text-stone-700 mb-1">
-                Catégorie
+                {f.categoryLabel}
               </label>
               <select
                 id="select-category"
@@ -359,14 +360,14 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
 
             <div>
               <label htmlFor="input-brand" className="block text-xs font-bold text-stone-700 mb-1">
-                Marque (optionnel)
+                {f.brandLabel}
               </label>
               <input
                 id="input-brand"
                 type="text"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
-                placeholder="ex. Danone, Herta..."
+                placeholder={f.brandPlaceholder}
                 className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
               />
             </div>
@@ -375,14 +376,14 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
           {/* Notes complémentaires */}
           <div>
             <label htmlFor="input-notes" className="block text-xs font-bold text-stone-700 mb-1">
-              Notes ou remarques
+              {f.notesLabel}
             </label>
             <input
               id="input-notes"
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="ex. Étagère du haut, pour le dîner de ce soir..."
+              placeholder={f.notesPlaceholder}
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
             />
           </div>
@@ -395,7 +396,7 @@ export const ProductConfirmationModal: React.FC<ProductConfirmationModalProps> =
               className="w-full py-3.5 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
             >
               <Check className="w-5 h-5" />
-              {editingProduct ? 'Enregistrer les modifications' : 'Enregistrer le produit (Rapide)'}
+              {editingProduct ? f.saveEdit : f.saveNew}
             </button>
           </div>
         </form>

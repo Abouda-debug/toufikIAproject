@@ -20,6 +20,7 @@ import {
   formatDateFrench,
   getDaysDifference,
 } from '../utils/dateUtils';
+import { useTranslations } from '../i18n';
 
 interface ProductCardProps {
   product: ProductItem;
@@ -34,10 +35,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onMarkDiscarded,
   onEdit,
 }) => {
+  const { t, lang } = useTranslations();
   const urgency = getExpirationUrgency(product.expirationDate);
-  const styles = getUrgencyStyles(urgency);
+  const styles = getUrgencyStyles(urgency, lang);
   const daysRemaining = getDaysDifference(product.expirationDate);
-  const daysText = formatDaysRemainingText(product.expirationDate);
+  const daysText = formatDaysRemainingText(product.expirationDate, lang);
 
   const x = useMotionValue(0);
   // Transformations pour révéler les fonds vert (droite) et rouge (gauche)
@@ -71,12 +73,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const getLocationLabel = () => {
     switch (product.storageLocation) {
       case 'frigo':
-        return 'Frigo';
+        return t.storageLocations.frigo;
       case 'congelateur':
-        return 'Congélateur';
+        return t.storageLocations.congelateur;
       case 'placard':
       default:
-        return 'Placard';
+        return t.storageLocations.placard;
     }
   };
 
@@ -89,7 +91,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       >
         <div className="flex items-center gap-2">
           <Utensils className="w-6 h-6 animate-bounce" />
-          <span className="text-sm uppercase tracking-wider">Consommé ! Sauvé</span>
+          <span className="text-sm uppercase tracking-wider">{t.productCard.savedBanner}</span>
         </div>
       </motion.div>
 
@@ -99,7 +101,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className="absolute inset-0 bg-rose-600 flex items-center justify-end pr-6 text-white font-bold rounded-2xl z-0"
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm uppercase tracking-wider">Jeté</span>
+          <span className="text-sm uppercase tracking-wider">{t.productCard.discardedBanner}</span>
           <Trash2 className="w-6 h-6 animate-bounce" />
         </div>
       </motion.div>
@@ -139,7 +141,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {/* Date imprimée & Type (DLC / DDM) */}
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-medium">
                 <Calendar className="w-3 h-3 text-stone-500" />
-                {product.dateType || 'DLC'} : {formatDateFrench(product.expirationDate)}
+                {product.dateType || 'DLC'} : {formatDateFrench(product.expirationDate, lang)}
               </span>
 
               {/* Emplacement */}
@@ -173,11 +175,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 e.stopPropagation();
                 onMarkConsumed(product.id);
               }}
-              title="Marquer comme consommé (aliment sauvé !)"
+              title={t.productCard.consumeTitle}
               className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all text-xs font-bold active:scale-95"
             >
               <Utensils className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Consommé</span>
+              <span className="hidden sm:inline">{t.productCard.consumeButton}</span>
             </button>
 
             <button
@@ -186,11 +188,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 e.stopPropagation();
                 onMarkDiscarded(product.id);
               }}
-              title="Marquer comme jeté"
+              title={t.productCard.discardTitle}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-stone-50 text-stone-500 hover:bg-rose-50 hover:text-rose-600 border border-stone-200 hover:border-rose-200 transition-all text-xs font-semibold active:scale-95"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Jeté</span>
+              <span className="hidden sm:inline">{t.productCard.discardButton}</span>
             </button>
           </div>
         </div>
@@ -198,10 +200,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Indication visuelle de swipe discrète pour mobile */}
         <div className="mt-2 pt-2 border-t border-stone-100 flex items-center justify-between text-[10px] text-stone-400">
           <span className="flex items-center gap-1">
-            👉 Glisser à droite pour <strong className="text-emerald-700">Consommer</strong>
+            👉 {t.productCard.swipeRightHint} <strong className="text-emerald-700">{t.productCard.swipeRightAction}</strong>
           </span>
           <span className="flex items-center gap-1">
-            👈 Glisser à gauche pour <strong className="text-rose-700">Jeter</strong>
+            👈 {t.productCard.swipeLeftHint} <strong className="text-rose-700">{t.productCard.swipeLeftAction}</strong>
           </span>
         </div>
       </motion.div>
