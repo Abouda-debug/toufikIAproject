@@ -31,11 +31,12 @@ import {
 import {
   getDaysDifference,
   getExpirationUrgency,
-  formatDateFrench,
 } from './utils/dateUtils';
 import {
   getScheduledReminders,
   sendLocalNotification,
+  getReminderDaysPreference,
+  setReminderDaysPreference,
 } from './utils/notificationService';
 import { TopAppBar } from './components/TopAppBar';
 import { AntiWasteHeader } from './components/AntiWasteHeader';
@@ -44,19 +45,22 @@ import { CameraScanModal } from './components/CameraScanModal';
 import { ProductConfirmationModal } from './components/ProductConfirmationModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { StatsModal } from './components/StatsModal';
+import { SettingsModal } from './components/SettingsModal';
 import { useTranslations } from './i18n';
 
 export default function App() {
-  const { t } = useTranslations();
+  const { t, lang } = useTranslations();
   const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
   const [activeFilter, setActiveFilter] = useState<'all' | 'urgent' | 'warning' | 'safe'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [reminderDaysBefore, setReminderDaysBefore] = useState<number>(() => getReminderDaysPreference());
+
   // Modals state
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Transient data for confirmation & editing
   const [extractedData, setExtractedData] = useState<ExtractedProductData | null>(null);
@@ -115,10 +119,10 @@ export default function App() {
     return { urgent, warning, safe, total: activeProductsSorted.length };
   }, [activeProductsSorted]);
 
-  // Scheduled reminders list (J-3 and J-0)
+  // Scheduled reminders list (J-N configurable et J-0)
   const scheduledReminders = useMemo(() => {
-    return getScheduledReminders(products);
-  }, [products]);
+    return getScheduledReminders(products, reminderDaysBefore, lang);
+  }, [products, reminderDaysBefore, lang]);
 
   // Filtered products based on category chips and search term
   const displayedProducts = useMemo(() => {
@@ -249,6 +253,13 @@ export default function App() {
     showToast(t.productRestored, 'info');
   };
 
+  // Actions: Change the reminder delay preference (Settings)
+  const handleChangeReminderDays = (days: number) => {
+    setReminderDaysBefore(days);
+    setReminderDaysPreference(days);
+    showToast(t.settings.savedToast, 'success');
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAF8] flex flex-col font-['Plus_Jakarta_Sans',system-ui,-apple-system,sans-serif] text-[#191C1A]">
       {/* Top Application Bar (Clean Jetpack Compose style) */}
@@ -257,6 +268,7 @@ export default function App() {
         urgentCount={counts.urgent}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenStats={() => setIsStatsOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Main Content View (Single-View Constraint, highly focused) */}
@@ -342,7 +354,7 @@ export default function App() {
         <button
           id="btn-quick-manual-add"
           onClick={handleManualAdd}
-          title="Ajout rapide manuel"
+          title={t.quickEntry}
           className="hidden sm:flex items-center gap-1.5 px-3.5 py-3 rounded-full bg-white text-stone-700 hover:text-stone-900 font-bold text-xs shadow-lg shadow-stone-900/10 border border-stone-200 hover:bg-stone-50 active:scale-95 transition-all"
         >
           <span>{t.quickEntry}</span>
@@ -352,7 +364,7 @@ export default function App() {
         <button
           id="fab-add-product"
           onClick={handleOpenScanner}
-          aria-label="Prendre en photo un emballage pour ajouter un produit"
+          aria-label={t.scanPackage}
           className="group relative flex items-center gap-2 px-4 py-3.5 sm:px-5 sm:py-4 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-xl shadow-emerald-950/20 active:scale-95 transition-all"
         >
           <Camera className="w-5 h-5 transition-transform group-hover:scale-110" />
@@ -403,8 +415,9 @@ export default function App() {
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
         reminders={scheduledReminders}
+        reminderDaysBefore={reminderDaysBefore}
         onTriggerSimulatedAlert={(reminder) => {
-          showToast(`🔔 Alerte ${reminder.type} : "${reminder.productName}" !`, 'warning');
+          showToast(t.simulatedAlertToast(reminder.type, reminder.productName), 'warning');
         }}
       />
 
@@ -415,6 +428,13 @@ export default function App() {
         products={products}
         onResetData={handleResetData}
         onRestoreProduct={handleRestoreProduct}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        reminderDaysBefore={reminderDaysBefore}
+        onChangeReminderDays={handleChangeReminderDays}
       />
     </div>
   );

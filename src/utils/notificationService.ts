@@ -2,6 +2,12 @@ import { ProductItem, ScheduledReminder } from '../types';
 import { getDaysDifference, formatDateFrench } from './dateUtils';
 
 const NOTIFICATIONS_PREF_KEY = 'nowaste_notifications_enabled';
+const REMINDER_DAYS_KEY = 'nowaste_reminder_days_before';
+
+export const REMINDER_DELAY_OPTIONS = [1, 3, 5, 7] as const;
+export const DEFAULT_REMINDER_DAYS_BEFORE = 3;
+
+type Lang = 'fr' | 'en';
 
 export function isNotificationSupported(): boolean {
   return typeof window !== 'undefined' && 'Notification' in window;
@@ -26,26 +32,71 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
- * Génère la liste des rappels planifiés (J-3 et J-0) pour tous les produits actifs
+ * Lit le délai de rappel préféré (en jours avant péremption) depuis le local storage.
+ * Retourne la valeur par défaut si absente ou invalide.
  */
-export function getScheduledReminders(products: ProductItem[]): ScheduledReminder[] {
+export function getReminderDaysPreference(): number {
+  try {
+    const raw = localStorage.getItem(REMINDER_DAYS_KEY);
+    const parsed = raw ? parseInt(raw, 10) : NaN;
+    if (REMINDER_DELAY_OPTIONS.includes(parsed as any)) {
+      return parsed;
+    }
+  } catch (e) {
+    console.error('Erreur lecture préférence de rappel:', e);
+  }
+  return DEFAULT_REMINDER_DAYS_BEFORE;
+}
+
+export function setReminderDaysPreference(days: number): void {
+  try {
+    localStorage.setItem(REMINDER_DAYS_KEY, String(days));
+  } catch (e) {
+    console.error('Erreur sauvegarde préférence de rappel:', e);
+  }
+}
+
+/**
+ * Génère la liste des rappels planifiés (J-N configurable et J-0) pour tous les produits actifs
+ */
+export function getScheduledReminders(
+  products: ProductItem[],
+  reminderDaysBefore: number = DEFAULT_REMINDER_DAYS_BEFORE,
+  lang: Lang = 'fr'
+): ScheduledReminder[] {
   const reminders: ScheduledReminder[] = [];
   const activeProducts = products.filter((p) => p.status === 'active');
 
+  const messages =
+    lang === 'fr'
+      ? {
+          jN: (name: string, days: number, date: string) =>
+            `🔔 Rappel J-${days} : "${name}" périme dans ${days} jour${days > 1 ? 's' : ''} (${date}). Pensez à le cuisiner !`,
+          j0: (name: string, date: string) =>
+            `🚨 Alerte J-0 : "${name}" périme aujourd'hui (${date}) ! Consommez-le maintenant pour éviter le gaspillage.`,
+        }
+      : {
+          jN: (name: string, days: number, date: string) =>
+            `🔔 Reminder (day -${days}): "${name}" expires in ${days} day${days > 1 ? 's' : ''} (${date}). Time to cook it!`,
+          j0: (name: string, date: string) =>
+            `🚨 Alert (day 0): "${name}" expires today (${date})! Consume it now to avoid waste.`,
+        };
+
   for (const product of activeProducts) {
     const daysRemaining = getDaysDifference(product.expirationDate);
+    const formattedDate = formatDateFrench(product.expirationDate, lang);
 
-    // Rappel J-3 (3 jours avant la date)
-    const j3ScheduledDate = computeOffsetDate(product.expirationDate, -3);
+    // Rappel J-N (N jours avant la date, configurable)
+    const jNScheduledDate = computeOffsetDate(product.expirationDate, -reminderDaysBefore);
     reminders.push({
-      id: `${product.id}-j3`,
+      id: `${product.id}-jn`,
       productId: product.id,
       productName: product.name,
       expirationDate: product.expirationDate,
-      type: 'J-3',
-      scheduledDate: j3ScheduledDate,
-      isTriggered: daysRemaining <= 3,
-      message: `🔔 Rappel J-3 : "${product.name}" périme dans 3 jours (${formatDateFrench(product.expirationDate)}). Pensez à le cuisiner !`,
+      type: `J-${reminderDaysBefore}`,
+      scheduledDate: jNScheduledDate,
+      isTriggered: daysRemaining <= reminderDaysBefore,
+      message: messages.jN(product.name, reminderDaysBefore, formattedDate),
     });
 
     // Rappel J-0 (le jour même)
@@ -57,7 +108,7 @@ export function getScheduledReminders(products: ProductItem[]): ScheduledReminde
       type: 'J-0',
       scheduledDate: product.expirationDate,
       isTriggered: daysRemaining <= 0,
-      message: `🚨 Alerte J-0 : "${product.name}" périme aujourd'hui (${formatDateFrench(product.expirationDate)}) ! Consommez-le maintenant pour éviter le gaspillage.`,
+      message: messages.j0(product.name, formattedDate),
     });
   }
 

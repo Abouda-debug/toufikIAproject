@@ -1,12 +1,14 @@
 import React from 'react';
-import { Leaf, Bell, BarChart3, ShieldCheck } from 'lucide-react';
+import { Leaf, Bell, BarChart3, ShieldCheck, Settings } from 'lucide-react';
 import { AntiWasteStats } from '../types';
+import { useTranslations } from '../i18n';
 
 interface TopAppBarProps {
   stats: AntiWasteStats;
   urgentCount: number;
   onOpenNotifications: () => void;
   onOpenStats: () => void;
+  onOpenSettings: () => void;
 }
 
 export const TopAppBar: React.FC<TopAppBarProps> = ({
@@ -14,7 +16,9 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   urgentCount,
   onOpenNotifications,
   onOpenStats,
+  onOpenSettings,
 }) => {
+  const { t } = useTranslations();
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80 shadow-xs">
       <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -33,7 +37,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
               </span>
             </div>
             <p className="text-xs text-stone-500 font-medium">
-              Zéro gaspillage alimentaire
+              {t.topAppBar.tagline}
             </p>
           </div>
         </div>
@@ -44,11 +48,11 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
           <button
             id="btn-open-stats"
             onClick={onOpenStats}
-            aria-label="Voir les statistiques anti-gaspillage"
+            aria-label={t.topAppBar.statsAria}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100 transition-colors text-xs font-semibold"
           >
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span className="hidden sm:inline">Sauvés :</span>
+            <span className="hidden sm:inline">{t.topAppBar.savedShort}</span>
             <span className="font-bold text-emerald-900">{stats.totalSaved}</span>
           </button>
 
@@ -56,7 +60,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
           <button
             id="btn-open-notifications"
             onClick={onOpenNotifications}
-            aria-label="Centre de notifications et rappels"
+            aria-label={t.topAppBar.notificationsAria}
             className="relative p-2 rounded-full text-stone-700 hover:bg-stone-100 transition-colors"
           >
             <Bell className="w-5 h-5" />
@@ -71,10 +75,20 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
           <button
             id="btn-view-history"
             onClick={onOpenStats}
-            aria-label="Historique des produits consommés"
+            aria-label={t.topAppBar.historyAria}
             className="p-2 rounded-full text-stone-700 hover:bg-stone-100 transition-colors"
           >
             <BarChart3 className="w-5 h-5" />
+          </button>
+
+          {/* Settings button */}
+          <button
+            id="btn-open-settings"
+            onClick={onOpenSettings}
+            aria-label={t.topAppBar.settingsAria}
+            className="p-2 rounded-full text-stone-700 hover:bg-stone-100 transition-colors"
+          >
+            <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>

@@ -64,7 +64,7 @@ export interface ScheduledReminder {
   productId: string;
   productName: string;
   expirationDate: string;
-  type: 'J-3' | 'J-0';
+  type: `J-${number}` | 'J-0';
   scheduledDate: string;
   isTriggered: boolean;
   message: string;

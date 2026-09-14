@@ -19,11 +19,13 @@ import {
   sendLocalNotification,
 } from '../utils/notificationService';
 import { formatDateFrench } from '../utils/dateUtils';
+import { useTranslations } from '../i18n';
 
 interface NotificationsModalProps {
   isOpen: boolean;
   onClose: () => void;
   reminders: ScheduledReminder[];
+  reminderDaysBefore: number;
   onTriggerSimulatedAlert: (reminder: ScheduledReminder) => void;
 }
 
@@ -31,8 +33,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   isOpen,
   onClose,
   reminders,
+  reminderDaysBefore,
   onTriggerSimulatedAlert,
 }) => {
+  const { t, lang } = useTranslations();
+  const n = t.notifications;
   const [permission, setPermission] = useState<NotificationPermission>(
     getNotificationPermissionStatus()
   );
@@ -68,9 +73,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
     // 3. Alerte visuelle toast
     if (notificationSent) {
-      setSuccessToast(`Notification envoyée sur votre système pour "${reminder.productName}" !`);
+      setSuccessToast(n.toastSentSuccess(reminder.productName));
     } else {
-      setSuccessToast(`Simulation d'alerte activée : "${reminder.productName}" !`);
+      setSuccessToast(n.toastSimulated(reminder.productName));
     }
 
     // 4. Déclencher le callback parent
@@ -93,10 +98,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     setPermission(getNotificationPermissionStatus());
     if (granted) {
       sendLocalNotification(
-        'nowaste Activé ! 🌱',
-        'Les rappels de péremption sont maintenant activés : J-3 et Jour J.'
+        n.activatedTitle,
+        n.activatedBody(reminderDaysBefore)
       );
-      setSuccessToast('Notifications système autorisées avec succès !');
+      setSuccessToast(n.toastPermissionGranted);
       setTimeout(() => setSuccessToast(null), 3000);
     }
   };
@@ -120,10 +125,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-stone-900 font-['Plus_Jakarta_Sans',sans-serif]">
-                Rappels & Notifications
+                {n.title}
               </h2>
               <p className="text-xs text-stone-500">
-                Planification automatique J-3 et Jour J
+                {n.subtitle(reminderDaysBefore)}
               </p>
             </div>
           </div>
@@ -143,7 +148,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold text-stone-900">
                 <Smartphone className="w-4 h-4 text-emerald-700" />
-                <span>Notifications de l'appareil</span>
+                <span>{n.deviceNotifications}</span>
               </div>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -152,12 +157,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     : 'bg-stone-200 text-stone-700'
                 }`}
               >
-                {permission === 'granted' ? 'Activées' : 'Non activées'}
+                {permission === 'granted' ? n.enabled : n.notEnabled}
               </span>
             </div>
             <p className="text-xs text-stone-600">
-              L'application planifie automatiquement deux alertes pour chaque produit enregistré :
-              <strong> 3 jours avant</strong> la date limite, puis <strong>le jour même</strong>.
+              {n.explanation(reminderDaysBefore)}
             </p>
             {permission !== 'granted' && isNotificationSupported() && (
               <button
@@ -165,7 +169,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 onClick={handleRequestPermission}
                 className="w-full py-2 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition-all"
               >
-                Autoriser les notifications système
+                {n.enableButton}
               </button>
             )}
           </div>
@@ -176,7 +180,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-black text-xs uppercase tracking-wide">
                   <BellRing className="w-4 h-4 animate-bounce" />
-                  <span>Alerte {activeTestAlert.type} déclenchée !</span>
+                  <span>{n.alertTriggered(activeTestAlert.type)}</span>
                 </div>
                 <button
                   onClick={() => setActiveTestAlert(null)}
@@ -189,9 +193,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 {activeTestAlert.message}
               </p>
               <div className="pt-1 flex items-center justify-between text-[10px] text-amber-100">
-                <span>{formatDateFrench(activeTestAlert.expirationDate)}</span>
+                <span>{formatDateFrench(activeTestAlert.expirationDate, lang)}</span>
                 <span className="bg-white/20 px-2 py-0.5 rounded-full font-bold">
-                  Test réussi
+                  {n.testSucceeded}
                 </span>
               </div>
             </div>
@@ -215,7 +219,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               }`}
             >
-              Tous ({reminders.length})
+              {n.filterAll(reminders.length)}
             </button>
             <button
               onClick={() => setFilterType('due')}
@@ -225,7 +229,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
               }`}
             >
-              À consommer maintenant ({dueCount})
+              {n.filterDue(dueCount)}
             </button>
             <button
               onClick={() => setFilterType('upcoming')}
@@ -235,7 +239,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
               }`}
             >
-              À venir ({reminders.length - dueCount})
+              {n.filterUpcoming(reminders.length - dueCount)}
             </button>
           </div>
 
@@ -243,7 +247,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <div className="space-y-2.5">
             {filteredReminders.length === 0 ? (
               <div className="p-6 text-center text-stone-400 text-xs">
-                Aucun rappel dans cette catégorie.
+                {n.emptyCategory}
               </div>
             ) : (
               filteredReminders.map((reminder) => (
@@ -278,11 +282,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                         <div className="flex items-center gap-2 mt-2 text-[10px] text-stone-500">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-stone-400" />
-                            Prévu le {formatDateFrench(reminder.scheduledDate)}
+                            {n.scheduledOn(formatDateFrench(reminder.scheduledDate, lang))}
                           </span>
                           {reminder.isTriggered && (
                             <span className="font-bold text-red-600 flex items-center gap-0.5">
-                              • Alerte active
+                              • {n.activeAlert}
                             </span>
                           )}
                         </div>
@@ -292,11 +296,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     <button
                       id={`btn-test-alert-${reminder.id}`}
                       onClick={() => handleTestAlert(reminder)}
-                      title="Tester l'alerte locale"
+                      title={n.testAlertTitle}
                       className="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[11px] font-bold shrink-0 transition-colors flex items-center gap-1 active:scale-95"
                     >
                       <BellRing className="w-3 h-3 text-amber-700" />
-                      <span>Tester l'alerte</span>
+                      <span>{n.testAlertButton}</span>
                     </button>
                   </div>
                 </div>
@@ -308,14 +312,14 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         {/* Footer */}
         <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center justify-between text-xs">
           <span className="text-stone-500">
-            Fonctionne 100% hors-ligne via l'ordonnanceur local
+            {n.footerOffline}
           </span>
           <button
             id="btn-close-notif"
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-stone-900 text-white font-bold hover:bg-stone-800"
           >
-            Fermer
+            {n.close}
           </button>
         </div>
       </div>
