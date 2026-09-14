@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">nowaste</string>
+    <string name="title_activity_main">nowaste</string>
+    <string name="package_name">com.nowaste.app</string>
+    <string name="custom_url_scheme">com.nowaste.app</string>
+</resources>

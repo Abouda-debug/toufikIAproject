@@ -37,6 +37,9 @@ import {
   sendLocalNotification,
   getReminderDaysPreference,
   setReminderDaysPreference,
+  isNativePlatform,
+  requestNativeNotificationPermission,
+  syncNativeScheduledNotifications,
 } from './utils/notificationService';
 import { TopAppBar } from './components/TopAppBar';
 import { AntiWasteHeader } from './components/AntiWasteHeader';
@@ -78,6 +81,13 @@ export default function App() {
   useEffect(() => {
     saveProductsToStorage(products);
   }, [products]);
+
+  // Native app (Capacitor) : demande la permission de notifications planifiées au démarrage
+  useEffect(() => {
+    if (isNativePlatform) {
+      requestNativeNotificationPermission();
+    }
+  }, []);
 
   // Toast auto-dismiss
   useEffect(() => {
@@ -123,6 +133,14 @@ export default function App() {
   const scheduledReminders = useMemo(() => {
     return getScheduledReminders(products, reminderDaysBefore, lang);
   }, [products, reminderDaysBefore, lang]);
+
+  // Native app (Capacitor) : resynchronise les notifications OS planifiées à chaque changement
+  // de produits ou de délai de rappel (l'API Web Notification ne suffit pas app fermée)
+  useEffect(() => {
+    if (isNativePlatform) {
+      syncNativeScheduledNotifications(scheduledReminders);
+    }
+  }, [scheduledReminders]);
 
   // Filtered products based on category chips and search term
   const displayedProducts = useMemo(() => {

@@ -1,13 +1,24 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
+import cors from "cors";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
+// CORS : nécessaire pour que l'app mobile packagée (Capacitor, origine
+// capacitor://localhost ou https://localhost) puisse appeler ce backend
+// une fois déployé séparément (ex: Render).
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
+app.use(
+  cors({
+    origin: allowedOrigin ? allowedOrigin.split(",") : true,
+  })
+);
 
 // Middleware for parsing JSON with ample capacity for camera image payloads
 app.use(express.json({ limit: "25mb" }));
@@ -218,7 +229,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Serveur nowaste actif sur http://0.0.0.0:${PORT}`);
+    console.log(`Serveur nowaste actif sur le port ${PORT}`);
   });
 }
 

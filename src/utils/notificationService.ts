@@ -1,5 +1,9 @@
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { ProductItem, ScheduledReminder } from '../types';
 import { getDaysDifference, formatDateFrench } from './dateUtils';
+
+export const isNativePlatform = Capacitor.isNativePlatform();
 
 const NOTIFICATIONS_PREF_KEY = 'nowaste_notifications_enabled';
 const REMINDER_DAYS_KEY = 'nowaste_reminder_days_before';
@@ -142,5 +146,70 @@ export function sendLocalNotification(title: string, body: string): boolean {
   } catch (e) {
     console.error('Erreur déclenchement notification locale:', e);
     return false;
+  }
+}
+
+/**
+ * Demande la permission d'envoyer des notifications natives planifiées (Android/iOS via Capacitor).
+ * Sans effet sur le web (utilise sendLocalNotification / requestNotificationPermission à la place).
+ */
+export async function requestNativeNotificationPermission(): Promise<boolean> {
+  if (!isNativePlatform) return false;
+  try {
+    const result = await LocalNotifications.requestPermissions();
+    return result.display === 'granted';
+  } catch (e) {
+    console.error('Erreur permission notifications natives:', e);
+    return false;
+  }
+}
+
+// Convertit une chaîne en entier stable (pour servir d'ID de notification native, qui doit être un nombre)
+function hashToInt32(input: string): number {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Resynchronise les notifications natives planifiées (Capacitor Local Notifications) avec la
+ * liste de rappels courante : annule tout ce qui est en attente puis replanifie uniquement les
+ * rappels dont la date est encore future. Appelé à chaque changement de produits ou de préférence
+ * de délai, pour que l'OS déclenche les rappels même app fermée (contrairement à l'API Web
+ * Notification qui ne fonctionne que si l'app est ouverte ou récemment active).
+ */
+export async function syncNativeScheduledNotifications(reminders: ScheduledReminder[]): Promise<void> {
+  if (!isNativePlatform) return;
+
+  try {
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+      await LocalNotifications.cancel({
+        notifications: pending.notifications.map((n) => ({ id: n.id })),
+      });
+    }
+
+    const now = Date.now();
+    const notificationsToSchedule = reminders
+      .filter((r) => !r.isTriggered)
+      .map((r) => {
+        const [y, m, d] = r.scheduledDate.split('-').map(Number);
+        const at = new Date(y, m - 1, d, 9, 0, 0); // Rappel à 9h le jour prévu
+        return {
+          id: hashToInt32(r.id),
+          title: `🔔 nowaste (${r.type})`,
+          body: r.message,
+          schedule: { at },
+        };
+      })
+      .filter((n) => n.schedule.at.getTime() > now);
+
+    if (notificationsToSchedule.length > 0) {
+      await LocalNotifications.schedule({ notifications: notificationsToSchedule });
+    }
+  } catch (e) {
+    console.error('Erreur synchronisation des notifications natives:', e);
   }
 }

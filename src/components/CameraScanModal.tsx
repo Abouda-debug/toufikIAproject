@@ -12,9 +12,16 @@ import {
   ExternalLink,
   Video,
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { SAMPLE_PACKAGES, SamplePackaging } from '../data/samplePackages';
 import { ExtractedProductData } from '../types';
 import { useTranslations } from '../i18n';
+import { API_BASE_URL } from '../config';
+
+// Sur l'app native (Capacitor), il n'y a pas de flux vidéo continu type getUserMedia :
+// la caméra natale prend une photo à la fois via le plugin @capacitor/camera.
+const isNativePlatform = Capacitor.isNativePlatform();
 
 interface CameraScanModalProps {
   isOpen: boolean;
@@ -196,12 +203,14 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
     startCamera(undefined, nextMode);
   };
 
-  // Initialiser la caméra à l'ouverture
+  // Initialiser la caméra à l'ouverture (getUserMedia web uniquement ; le natif utilise une capture à la demande)
   useEffect(() => {
     if (isOpen) {
       setDetectedDate(null);
       setNetworkError(null);
-      startCamera();
+      if (!isNativePlatform) {
+        startCamera();
+      }
     } else {
       stopCamera();
       stopAutoScan();
@@ -251,7 +260,7 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
       setScanStatus(c.readingByGemini);
 
       try {
-        const response = await fetch('/api/scan-product', {
+        const response = await fetch(`${API_BASE_URL}/api/scan-product`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -391,6 +400,23 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
     }
   };
 
+  // Capture via l'appareil photo natif (Capacitor) : une photo à la fois, pas de flux continu
+  const handleNativeCapture = async () => {
+    try {
+      const photo = await CapacitorCamera.getPhoto({
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera,
+        quality: 80,
+        allowEditing: false,
+      });
+      if (photo.base64String) {
+        processImageFrame(`data:image/jpeg;base64,${photo.base64String}`, true);
+      }
+    } catch (err) {
+      console.warn('Capture caméra native annulée ou refusée:', err);
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -458,7 +484,8 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
 
         {/* Content Body */}
         <div className="p-4 flex-1 overflow-y-auto space-y-3.5">
-          {/* Status badge & Auto-scan toggle */}
+          {/* Status badge & Auto-scan toggle (concept web : flux live getUserMedia, non applicable en natif) */}
+          {!isNativePlatform && (
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <span
@@ -525,8 +552,24 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
               </button>
             </div>
           </div>
+          )}
 
-          {/* Camera Viewport or Fallback Container */}
+          {/* Native capture card (Capacitor) : une photo à la fois via l'appareil photo du téléphone */}
+          {isNativePlatform ? (
+            <div className="relative aspect-4/3 bg-stone-950 rounded-2xl overflow-hidden shadow-inner flex flex-col items-center justify-center gap-4 border-2 border-stone-800 p-6 text-center">
+              <Camera className="w-12 h-12 text-emerald-400 stroke-1" />
+              <p className="text-sm font-medium text-stone-200">{c.nativeCaptureHint}</p>
+              <button
+                id="btn-native-capture"
+                disabled={isAnalyzing}
+                onClick={handleNativeCapture}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-sm transition-colors disabled:opacity-60"
+              >
+                <Camera className="w-4 h-4" />
+                {c.nativeCaptureButton}
+              </button>
+            </div>
+          ) : (
           <div
             className={`relative aspect-4/3 bg-stone-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center border-2 transition-all ${
               detectedDate
@@ -636,14 +679,17 @@ export const CameraScanModal: React.FC<CameraScanModalProps> = ({
               </div>
             )}
           </div>
+          )}
 
-          {/* Bandeau d'explication "Sans clic" */}
+          {/* Bandeau d'explication "Sans clic" (concept web : capture automatique en direct) */}
+          {!isNativePlatform && (
           <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 text-emerald-950 text-xs flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-700 shrink-0" />
             <p className="text-[11px] leading-tight text-emerald-900">
               <strong>{c.zeroClickTitle}</strong> {c.zeroClickBody('24/09/2026')}
             </p>
           </div>
+          )}
 
           {/* Bandeau d'erreur réseau si besoin */}
           {networkError && (
