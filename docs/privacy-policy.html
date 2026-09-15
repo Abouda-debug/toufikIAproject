@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Politique de confidentialité — nowaste</title>
+<style>
+  :root {
+    --emerald-900: #064e3b;
+    --emerald-800: #065f46;
+    --emerald-700: #047857;
+    --emerald-100: #d1fae5;
+    --stone-900: #1c1917;
+    --stone-700: #44403c;
+    --stone-500: #78716c;
+    --stone-200: #e7e5e4;
+    --stone-50: #fafaf9;
+    --bg: #fafaf9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--stone-900);
+    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    background: linear-gradient(135deg, var(--emerald-800), var(--emerald-900));
+    color: white;
+    padding: 32px 20px;
+  }
+  .header-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.3rem;
+  }
+  .brand svg { width: 28px; height: 28px; }
+  .lang-toggle {
+    display: flex;
+    gap: 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .lang-toggle button {
+    border: none;
+    background: transparent;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .lang-toggle button.active {
+    background: white;
+    color: var(--emerald-800);
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  h1.page-title {
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+  }
+  .updated {
+    color: var(--stone-500);
+    font-size: 0.85rem;
+    margin: 0 0 32px;
+  }
+  h2 {
+    font-size: 1.1rem;
+    color: var(--emerald-800);
+    margin: 32px 0 8px;
+    border-bottom: 1px solid var(--stone-200);
+    padding-bottom: 6px;
+  }
+  p, li { color: var(--stone-700); font-size: 0.95rem; }
+  ul { padding-left: 20px; }
+  .callout {
+    background: var(--emerald-100);
+    border: 1px solid #a7f3d0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    color: var(--emerald-900);
+    margin: 16px 0;
+  }
+  a { color: var(--emerald-700); }
+  [data-lang="en"] { display: none; }
+  footer {
+    text-align: center;
+    color: var(--stone-500);
+    font-size: 0.8rem;
+    padding: 24px 20px 40px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      nowaste
+    </div>
+    <div class="lang-toggle">
+      <button type="button" data-set-lang="fr" class="active">FR</button>
+      <button type="button" data-set-lang="en">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div data-lang="fr">
+    <h1 class="page-title">Politique de confidentialité</h1>
+    <p class="updated">Dernière mise à jour : 15 septembre 2026</p>
+
+    <p>nowaste est une application qui vous aide à réduire le gaspillage alimentaire en scannant vos emballages pour en extraire automatiquement le nom du produit et sa date de péremption. Cette politique explique quelles données sont traitées et comment.</p>
+
+    <div class="callout">nowaste ne nécessite aucun compte. Vos produits, votre liste de courses et vos préférences sont stockés uniquement sur votre appareil.</div>
+
+    <h2>Quelles données sont traitées</h2>
+    <ul>
+      <li><strong>Photos d'emballages</strong> : lorsque vous scannez un produit, la photo est envoyée de façon sécurisée à notre serveur puis transmise à l'API Google Gemini pour en extraire le nom du produit et la date de péremption. Cette photo n'est jamais enregistrée ni sur notre serveur ni ailleurs : elle est traitée à la volée puis immédiatement supprimée de la mémoire.</li>
+      <li><strong>Noms de produits</strong> (sans photo) : lorsque vous utilisez la suggestion de recette pour vos produits proches de la péremption, la liste des noms de produits concernés est envoyée à l'API Google Gemini afin de générer une idée de recette.</li>
+      <li><strong>Données stockées localement</strong> : vos produits (nom, date, catégorie), votre liste de courses et votre délai de rappel préféré sont enregistrés uniquement dans la mémoire locale de votre appareil (stockage local du navigateur/application). Ces données ne sont jamais transmises à nos serveurs ni à un tiers.</li>
+    </ul>
+
+    <h2>Permissions utilisées</h2>
+    <ul>
+      <li><strong>Appareil photo</strong> : utilisé uniquement pour photographier un emballage au moment où vous appuyez sur le bouton de scan.</li>
+      <li><strong>Notifications</strong> : utilisées uniquement pour vous rappeler localement qu'un produit approche de sa date de péremption. Ces rappels sont programmés directement sur votre appareil, sans passer par un serveur.</li>
+    </ul>
+
+    <h2>Partage avec des tiers</h2>
+    <p>Nous ne vendons ni ne partageons vos données avec des tiers à des fins publicitaires ou commerciales. La seule transmission de données à un tiers est celle décrite ci-dessus vers l'API Google Gemini (Google Ireland Ltd / Google LLC), utilisée uniquement comme sous-traitant technique pour l'analyse d'image et la génération de texte, conformément à sa propre politique de confidentialité disponible sur <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>
+    <p>nowaste n'intègre aucun outil publicitaire, aucun tracker analytique tiers, et ne collecte aucune donnée de localisation.</p>
+
+    <h2>Sécurité et conservation</h2>
+    <p>La communication avec notre serveur d'analyse s'effectue de manière chiffrée (HTTPS). Aucune photo ni donnée personnelle n'est conservée sur nos serveurs après traitement. Vos données locales restent sur votre appareil tant que vous ne les supprimez pas.</p>
+
+    <h2>Vos droits et la suppression de vos données</h2>
+    <p>Vous pouvez à tout moment supprimer définitivement toutes vos données depuis l'application : <em>Paramètres → Vos données → Vider mes données</em>. Désinstaller l'application supprime également toutes les données stockées localement.</p>
+
+    <h2>Confidentialité des enfants</h2>
+    <p>nowaste ne s'adresse pas spécifiquement aux enfants et ne collecte sciemment aucune donnée personnelle d'enfants de moins de 13 ans.</p>
+
+    <h2>Modifications de cette politique</h2>
+    <p>Cette politique peut être mise à jour occasionnellement. La date de dernière mise à jour est indiquée en haut de cette page.</p>
+
+    <h2>Contact</h2>
+    <p>Pour toute question concernant cette politique de confidentialité, vous pouvez nous contacter à l'adresse suivante : <a href="mailto:toufikbelounis@gmail.com">toufikbelounis@gmail.com</a></p>
+  </div>
+
+  <div data-lang="en">
+    <h1 class="page-title">Privacy Policy</h1>
+    <p class="updated">Last updated: September 15, 2026</p>
+
+    <p>nowaste is an app that helps you reduce food waste by scanning your food packaging to automatically extract the product name and expiry date. This policy explains what data is processed and how.</p>
+
+    <div class="callout">nowaste does not require an account. Your products, shopping list, and preferences are stored only on your device.</div>
+
+    <h2>What data is processed</h2>
+    <ul>
+      <li><strong>Packaging photos</strong>: when you scan a product, the photo is securely sent to our server and forwarded to the Google Gemini API to extract the product name and expiry date. This photo is never stored on our server or anywhere else: it is processed on the fly and immediately discarded from memory.</li>
+      <li><strong>Product names</strong> (no photo): when you use the recipe suggestion feature for products nearing expiry, the list of relevant product names is sent to the Google Gemini API to generate a recipe idea.</li>
+      <li><strong>Locally stored data</strong>: your products (name, date, category), your shopping list, and your preferred reminder delay are saved only in your device's local storage. This data is never transmitted to our servers or to any third party.</li>
+    </ul>
+
+    <h2>Permissions used</h2>
+    <ul>
+      <li><strong>Camera</strong>: used only to photograph packaging when you tap the scan button.</li>
+      <li><strong>Notifications</strong>: used only to locally remind you that a product is nearing its expiry date. These reminders are scheduled directly on your device, without going through a server.</li>
+    </ul>
+
+    <h2>Sharing with third parties</h2>
+    <p>We do not sell or share your data with third parties for advertising or commercial purposes. The only data transmission to a third party is the one described above, to the Google Gemini API (Google Ireland Ltd / Google LLC), used solely as a technical processor for image analysis and text generation, in accordance with its own privacy policy available at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>
+    <p>nowaste does not include any advertising tools, third-party analytics trackers, and does not collect any location data.</p>
+
+    <h2>Security and retention</h2>
+    <p>Communication with our analysis server is encrypted (HTTPS). No photo or personal data is retained on our servers after processing. Your local data stays on your device until you delete it.</p>
+
+    <h2>Your rights and deleting your data</h2>
+    <p>You can permanently delete all your data from the app at any time: <em>Settings → Your data → Clear my data</em>. Uninstalling the app also removes all locally stored data.</p>
+
+    <h2>Children's privacy</h2>
+    <p>nowaste is not specifically directed at children and does not knowingly collect personal data from children under 13.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>This policy may be updated occasionally. The last update date is shown at the top of this page.</p>
+
+    <h2>Contact</h2>
+    <p>For any question about this privacy policy, you can contact us at: <a href="mailto:toufikbelounis@gmail.com">toufikbelounis@gmail.com</a></p>
+  </div>
+</main>
+
+<footer>nowaste — zéro gaspillage alimentaire</footer>
+
+<script>
+  var buttons = document.querySelectorAll('[data-set-lang]');
+  function setLang(lang) {
+    document.querySelectorAll('[data-lang]').forEach(function (el) {
+      el.style.display = el.getAttribute('data-lang') === lang ? '' : 'none';
+    });
+    buttons.forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-set-lang') === lang);
+    });
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () { setLang(b.getAttribute('data-set-lang')); });
+  });
+  var browserLang = (navigator.language || 'fr').toLowerCase().startsWith('en') ? 'en' : 'fr';
+  setLang(browserLang);
+</script>
+</body>
+</html>
