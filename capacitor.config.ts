@@ -7,6 +7,15 @@ const config: CapacitorConfig = {
   appId: 'com.nowaste.app',
   appName: 'nowaste',
   webDir: 'dist',
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 800,
+      backgroundColor: '#F8FAF8',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+    },
+  },
 };
 
 export default config;

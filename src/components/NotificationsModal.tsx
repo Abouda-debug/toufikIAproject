@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Bell,
@@ -17,6 +17,10 @@ import {
   getNotificationPermissionStatus,
   requestNotificationPermission,
   sendLocalNotification,
+  isNativePlatform,
+  getNativeNotificationPermissionStatus,
+  requestNativeNotificationPermission,
+  sendImmediateNativeNotification,
 } from '../utils/notificationService';
 import { formatDateFrench } from '../utils/dateUtils';
 import { useTranslations } from '../i18n';
@@ -38,12 +42,20 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 }) => {
   const { t, lang } = useTranslations();
   const n = t.notifications;
-  const [permission, setPermission] = useState<NotificationPermission>(
-    getNotificationPermissionStatus()
+  // Sur natif (Capacitor), la permission qui compte est celle de LocalNotifications,
+  // pas celle de l'API Web Notification (souvent non fonctionnelle dans une WebView Android).
+  const [isPermissionGranted, setIsPermissionGranted] = useState(
+    () => !isNativePlatform && getNotificationPermissionStatus() === 'granted'
   );
   const [filterType, setFilterType] = useState<'all' | 'due' | 'upcoming'>('all');
   const [activeTestAlert, setActiveTestAlert] = useState<ScheduledReminder | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen && isNativePlatform) {
+      getNativeNotificationPermissionStatus().then(setIsPermissionGranted);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -51,12 +63,24 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     // 1. Déclencher le visuel d'alerte immédiat dans la modale
     setActiveTestAlert(reminder);
 
-    // 2. Tenter la notification système Web si supportée
+    // 2. Tenter la notification système (native sur mobile, Web Notification API sinon)
     let notificationSent = false;
-    if (isNotificationSupported()) {
+    if (isNativePlatform) {
+      let granted = isPermissionGranted;
+      if (!granted) {
+        granted = await requestNativeNotificationPermission();
+        setIsPermissionGranted(granted);
+      }
+      if (granted) {
+        notificationSent = await sendImmediateNativeNotification(
+          `🔔 nowaste (${reminder.type})`,
+          reminder.message
+        );
+      }
+    } else if (isNotificationSupported()) {
       if (Notification.permission === 'default') {
         const granted = await requestNotificationPermission();
-        setPermission(getNotificationPermissionStatus());
+        setIsPermissionGranted(getNotificationPermissionStatus() === 'granted');
         if (granted) {
           notificationSent = sendLocalNotification(
             `🔔 nowaste (${reminder.type}) : ${reminder.productName}`,
@@ -94,13 +118,17 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   };
 
   const handleRequestPermission = async () => {
-    const granted = await requestNotificationPermission();
-    setPermission(getNotificationPermissionStatus());
+    const granted = isNativePlatform
+      ? await requestNativeNotificationPermission()
+      : await requestNotificationPermission();
+    setIsPermissionGranted(granted);
     if (granted) {
-      sendLocalNotification(
-        n.activatedTitle,
-        n.activatedBody(reminderDaysBefore)
-      );
+      if (!isNativePlatform) {
+        sendLocalNotification(
+          n.activatedTitle,
+          n.activatedBody(reminderDaysBefore)
+        );
+      }
       setSuccessToast(n.toastPermissionGranted);
       setTimeout(() => setSuccessToast(null), 3000);
     }
@@ -152,18 +180,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               </div>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  permission === 'granted'
+                  isPermissionGranted
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                     : 'bg-stone-200 text-stone-700'
                 }`}
               >
-                {permission === 'granted' ? n.enabled : n.notEnabled}
+                {isPermissionGranted ? n.enabled : n.notEnabled}
               </span>
             </div>
             <p className="text-xs text-stone-600">
               {n.explanation(reminderDaysBefore)}
             </p>
-            {permission !== 'granted' && isNotificationSupported() && (
+            {!isPermissionGranted && (isNativePlatform || isNotificationSupported()) && (
               <button
                 id="btn-enable-notifications"
                 onClick={handleRequestPermission}

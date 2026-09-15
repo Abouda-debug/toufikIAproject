@@ -164,6 +164,44 @@ export async function requestNativeNotificationPermission(): Promise<boolean> {
   }
 }
 
+/**
+ * Vérifie l'état actuel de la permission de notifications natives (sans la demander).
+ * Sans effet sur le web.
+ */
+export async function getNativeNotificationPermissionStatus(): Promise<boolean> {
+  if (!isNativePlatform) return false;
+  try {
+    const result = await LocalNotifications.checkPermissions();
+    return result.display === 'granted';
+  } catch (e) {
+    console.error('Erreur vérification permission notifications natives:', e);
+    return false;
+  }
+}
+
+/**
+ * Déclenche immédiatement une notification native (test manuel depuis la modale Notifications).
+ * Sans effet sur le web (utilise sendLocalNotification à la place).
+ */
+export async function sendImmediateNativeNotification(title: string, body: string): Promise<boolean> {
+  if (!isNativePlatform) return false;
+  try {
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: Math.floor(Math.random() * 2147483647),
+          title,
+          body,
+        },
+      ],
+    });
+    return true;
+  } catch (e) {
+    console.error('Erreur envoi notification native immédiate:', e);
+    return false;
+  }
+}
+
 // Convertit une chaîne en entier stable (pour servir d'ID de notification native, qui doit être un nombre)
 function hashToInt32(input: string): number {
   let hash = 0;
