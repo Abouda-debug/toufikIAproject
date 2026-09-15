@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#065F46"/>
+      <stop offset="55%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#0F766E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <circle cx="900" cy="440" r="140" fill="#ffffff" opacity="0.08"/>
+  <path d="M840 20 l14 40 40 14 -40 14 -14 40 -14 -40 -40 -14 40 -14z" fill="#ffffff" opacity="0.14"/>
+
+  <rect x="72" y="184" width="132" height="132" rx="38" fill="rgba(255,255,255,0.16)" stroke="rgba(255,255,255,0.3)"/>
+  <g transform="translate(86,200) scale(4.5)">
+    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" fill="#ffffff"/>
+  </g>
+
+  <text x="236" y="256" font-family="Arial, sans-serif" font-weight="bold" font-size="66" letter-spacing="-1" fill="#ffffff">nowaste</text>
+  <rect x="530" y="216" width="88" height="34" rx="17" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.3)"/>
+  <text x="547" y="240" font-family="Arial, sans-serif" font-weight="bold" font-size="17" letter-spacing="1.5" fill="#ffffff">PRO</text>
+
+  <text x="238" y="300" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="26" fill="#D1FAE5">Scannez un emballage, l'IA lit la date.</text>
+  <text x="238" y="334" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="26" fill="#D1FAE5">Zéro gaspillage alimentaire.</text>
+</svg>
