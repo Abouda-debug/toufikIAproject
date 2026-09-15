@@ -10,6 +10,7 @@ import {
   Sparkles,
   ShieldCheck,
   Smartphone,
+  AlarmClock,
 } from 'lucide-react';
 import { ScheduledReminder } from '../types';
 import {
@@ -21,6 +22,8 @@ import {
   getNativeNotificationPermissionStatus,
   requestNativeNotificationPermission,
   sendImmediateNativeNotification,
+  getExactAlarmPermissionStatus,
+  requestExactAlarmPermission,
 } from '../utils/notificationService';
 import { formatDateFrench } from '../utils/dateUtils';
 import { useTranslations } from '../i18n';
@@ -47,6 +50,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [isPermissionGranted, setIsPermissionGranted] = useState(
     () => !isNativePlatform && getNotificationPermissionStatus() === 'granted'
   );
+  const [isExactAlarmGranted, setIsExactAlarmGranted] = useState(true);
   const [filterType, setFilterType] = useState<'all' | 'due' | 'upcoming'>('all');
   const [activeTestAlert, setActiveTestAlert] = useState<ScheduledReminder | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
@@ -54,8 +58,14 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   useEffect(() => {
     if (isOpen && isNativePlatform) {
       getNativeNotificationPermissionStatus().then(setIsPermissionGranted);
+      getExactAlarmPermissionStatus().then(setIsExactAlarmGranted);
     }
   }, [isOpen]);
+
+  const handleRequestExactAlarm = async () => {
+    const granted = await requestExactAlarmPermission();
+    setIsExactAlarmGranted(granted);
+  };
 
   if (!isOpen) return null;
 
@@ -201,6 +211,24 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               </button>
             )}
           </div>
+
+          {/* Exact alarm setting (Android 12+ only) : rappels délivrés pile à l'heure plutôt qu'approximativement */}
+          {isNativePlatform && !isExactAlarmGranted && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+                <AlarmClock className="w-4 h-4 text-amber-700" />
+                <span>{n.exactAlarmTitle}</span>
+              </div>
+              <p className="text-xs text-amber-800">{n.exactAlarmHint}</p>
+              <button
+                id="btn-enable-exact-alarm"
+                onClick={handleRequestExactAlarm}
+                className="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all"
+              >
+                {n.exactAlarmButton}
+              </button>
+            </div>
+          )}
 
           {/* Active Test Alert Banner (immediate visual confirmation inside the modal) */}
           {activeTestAlert && (

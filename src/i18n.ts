@@ -225,6 +225,9 @@ export const translations = {
       toastPermissionGranted: 'Notifications système autorisées avec succès !',
       activatedTitle: 'nowaste Activé ! 🌱',
       activatedBody: (days: number) => `Les rappels de péremption sont maintenant activés : J-${days} et Jour J.`,
+      exactAlarmTitle: 'Rappels précis à l’heure',
+      exactAlarmHint: 'Sans ça, Android peut retarder légèrement vos rappels (quelques minutes à quelques heures) au lieu de sonner pile à l’heure prévue.',
+      exactAlarmButton: 'Activer les rappels précis',
     },
 
     // StatsModal
@@ -492,6 +495,9 @@ export const translations = {
       toastPermissionGranted: 'System notifications successfully allowed!',
       activatedTitle: 'nowaste Activated! 🌱',
       activatedBody: (days: number) => `Expiry reminders are now active: day -${days} and day 0.`,
+      exactAlarmTitle: 'Precise reminder timing',
+      exactAlarmHint: 'Without this, Android may delay your reminders slightly (a few minutes to a few hours) instead of ringing exactly on time.',
+      exactAlarmButton: 'Enable precise timing',
     },
 
     stats: {

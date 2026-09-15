@@ -180,6 +180,37 @@ export async function getNativeNotificationPermissionStatus(): Promise<boolean> 
 }
 
 /**
+ * Vérifie si la permission "alarmes exactes" (Android 12+) est accordée. Sans elle, les
+ * rappels sont tout de même délivrés mais l'OS peut les retarder de quelques minutes/heures
+ * (mode "inexact") au lieu de sonner pile à l'heure prévue. Android < 12 : toujours true.
+ */
+export async function getExactAlarmPermissionStatus(): Promise<boolean> {
+  if (!isNativePlatform) return true;
+  try {
+    const result = await LocalNotifications.checkExactNotificationSetting();
+    return result.exact_alarm === 'granted';
+  } catch (e) {
+    console.error('Erreur vérification permission alarmes exactes:', e);
+    return true;
+  }
+}
+
+/**
+ * Ouvre l'écran système "Alarmes et rappels" pour que l'utilisateur active les alarmes
+ * exactes. Sans effet sur Android < 12 (renvoie granted directement) ni sur le web.
+ */
+export async function requestExactAlarmPermission(): Promise<boolean> {
+  if (!isNativePlatform) return true;
+  try {
+    const result = await LocalNotifications.changeExactNotificationSetting();
+    return result.exact_alarm === 'granted';
+  } catch (e) {
+    console.error('Erreur demande permission alarmes exactes:', e);
+    return false;
+  }
+}
+
+/**
  * Déclenche immédiatement une notification native (test manuel depuis la modale Notifications).
  * Sans effet sur le web (utilise sendLocalNotification à la place).
  */
