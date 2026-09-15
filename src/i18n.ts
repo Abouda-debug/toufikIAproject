@@ -265,6 +265,13 @@ export const translations = {
       dayOption: (n: number) => (n > 1 ? `${n} jours` : `${n} jour`),
       close: 'Fermer',
       savedToast: 'Préférence de rappel enregistrée.',
+      dataLabel: 'Vos données',
+      dataHint: 'Tout est stocké uniquement sur cet appareil — aucun compte, aucun serveur.',
+      clearDataButton: 'Vider mes données',
+      clearDataConfirm: 'Supprimer définitivement tous vos produits et votre liste de courses de cet appareil ? Cette action est irréversible.',
+      clearDataConfirmButton: 'Oui, tout supprimer',
+      clearDataCancelButton: 'Annuler',
+      clearDataToast: 'Toutes vos données ont été supprimées.',
     },
 
     // ShoppingListModal
@@ -533,6 +540,13 @@ export const translations = {
       dayOption: (n: number) => (n > 1 ? `${n} days` : `${n} day`),
       close: 'Close',
       savedToast: 'Reminder preference saved.',
+      dataLabel: 'Your data',
+      dataHint: 'Everything is stored only on this device — no account, no server.',
+      clearDataButton: 'Clear my data',
+      clearDataConfirm: 'Permanently delete all your products and shopping list from this device? This cannot be undone.',
+      clearDataConfirmButton: 'Yes, delete everything',
+      clearDataCancelButton: 'Cancel',
+      clearDataToast: 'All your data has been deleted.',
     },
 
     shoppingList: {

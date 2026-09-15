@@ -33,6 +33,7 @@ import {
   toggleShoppingListItem,
   removeShoppingListItem,
   clearCheckedItems,
+  clearShoppingList,
 } from './data/shoppingListStorage';
 import {
   getDaysDifference,
@@ -287,6 +288,13 @@ export default function App() {
     showToast(t.settings.savedToast, 'success');
   };
 
+  // Actions: Permanently clear all local data (products + shopping list)
+  const handleClearAllData = () => {
+    setProducts([]);
+    setShoppingList(clearShoppingList());
+    showToast(t.settings.clearDataToast, 'info');
+  };
+
   // Actions: Shopping list management
   const handleAddShoppingItem = (name: string) => {
     setShoppingList((prev) => addShoppingListItem(prev, name));
@@ -493,6 +501,7 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         reminderDaysBefore={reminderDaysBefore}
         onChangeReminderDays={handleChangeReminderDays}
+        onClearAllData={handleClearAllData}
       />
 
       <ShoppingListModal

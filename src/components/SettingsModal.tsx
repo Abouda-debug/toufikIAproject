@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Settings, Bell, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Settings, Bell, Check, Trash2, AlertTriangle } from 'lucide-react';
 import { useTranslations } from '../i18n';
 import { REMINDER_DELAY_OPTIONS } from '../utils/notificationService';
 
@@ -8,6 +8,7 @@ interface SettingsModalProps {
   onClose: () => void;
   reminderDaysBefore: number;
   onChangeReminderDays: (days: number) => void;
+  onClearAllData: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -15,9 +16,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   reminderDaysBefore,
   onChangeReminderDays,
+  onClearAllData,
 }) => {
   const { t } = useTranslations();
   const s = t.settings;
+  // Confirmation intégrée à l'UI plutôt que window.confirm(), qui ne s'affiche pas
+  // de façon fiable dans la WebView Android (pas de dialogue JS natif implémenté).
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) setIsConfirmingClear(false);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -71,6 +80,53 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <span>{s.dayOption(days)}</span>
               </button>
             ))}
+          </div>
+
+          <div className="pt-3 border-t border-stone-100 space-y-1.5">
+            <label className="text-xs font-bold text-stone-700 flex items-center gap-1.5">
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              {s.dataLabel}
+            </label>
+            <p className="text-xs text-stone-500">{s.dataHint}</p>
+
+            {isConfirmingClear ? (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-2.5">
+                <div className="flex items-start gap-2 text-xs text-rose-800">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span>{s.clearDataConfirm}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    id="btn-cancel-clear-data"
+                    type="button"
+                    onClick={() => setIsConfirmingClear(false)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-xs font-bold transition-all"
+                  >
+                    {s.clearDataCancelButton}
+                  </button>
+                  <button
+                    id="btn-confirm-clear-data"
+                    type="button"
+                    onClick={() => {
+                      onClearAllData();
+                      onClose();
+                    }}
+                    className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all"
+                  >
+                    {s.clearDataConfirmButton}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                id="btn-clear-all-data"
+                type="button"
+                onClick={() => setIsConfirmingClear(true)}
+                className="w-full mt-1 py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all"
+              >
+                {s.clearDataButton}
+              </button>
+            )}
           </div>
         </div>
 

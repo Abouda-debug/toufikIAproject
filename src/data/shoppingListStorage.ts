@@ -70,3 +70,8 @@ export function clearCheckedItems(list: ShoppingListItem[]): ShoppingListItem[] 
   saveShoppingList(updated);
   return updated;
 }
+
+export function clearShoppingList(): ShoppingListItem[] {
+  saveShoppingList([]);
+  return [];
+}
