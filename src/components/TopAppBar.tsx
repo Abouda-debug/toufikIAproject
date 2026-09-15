@@ -1,22 +1,26 @@
 import React from 'react';
-import { Leaf, Bell, BarChart3, ShieldCheck, Settings } from 'lucide-react';
+import { Leaf, Bell, ShoppingCart, ShieldCheck, Settings } from 'lucide-react';
 import { AntiWasteStats } from '../types';
 import { useTranslations } from '../i18n';
 
 interface TopAppBarProps {
   stats: AntiWasteStats;
   urgentCount: number;
+  shoppingListCount: number;
   onOpenNotifications: () => void;
   onOpenStats: () => void;
   onOpenSettings: () => void;
+  onOpenShoppingList: () => void;
 }
 
 export const TopAppBar: React.FC<TopAppBarProps> = ({
   stats,
   urgentCount,
+  shoppingListCount,
   onOpenNotifications,
   onOpenStats,
   onOpenSettings,
+  onOpenShoppingList,
 }) => {
   const { t } = useTranslations();
   return (
@@ -71,14 +75,19 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             )}
           </button>
 
-          {/* History / Stats button */}
+          {/* Shopping list button */}
           <button
-            id="btn-view-history"
-            onClick={onOpenStats}
-            aria-label={t.topAppBar.historyAria}
-            className="p-2 rounded-full text-stone-700 hover:bg-stone-100 transition-colors"
+            id="btn-open-shopping-list"
+            onClick={onOpenShoppingList}
+            aria-label={t.topAppBar.shoppingListAria}
+            className="relative p-2 rounded-full text-stone-700 hover:bg-stone-100 transition-colors"
           >
-            <BarChart3 className="w-5 h-5" />
+            <ShoppingCart className="w-5 h-5" />
+            {shoppingListCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center">
+                {shoppingListCount}
+              </span>
+            )}
           </button>
 
           {/* Settings button */}

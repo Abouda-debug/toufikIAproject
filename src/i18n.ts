@@ -28,7 +28,6 @@ export const translations = {
     markedDiscarded: (name: string) => `🗑️ "${name}" marqué comme jeté.`,
     productUpdated: (name: string) => `Produit "${name}" mis à jour !`,
     productSaved: (name: string) => `Produit "${name}" enregistré avec succès !`,
-    dataReset: 'Données réinitialisées avec succès.',
     productRestored: 'Produit restauré dans votre stock actif.',
     simulatedAlertToast: (type: string, name: string) => `🔔 Alerte ${type} : "${name}" !`,
 
@@ -38,7 +37,7 @@ export const translations = {
       savedShort: 'Sauvés :',
       statsAria: 'Voir les statistiques anti-gaspillage',
       notificationsAria: 'Centre de notifications et rappels',
-      historyAria: 'Historique des produits consommés',
+      shoppingListAria: 'Liste de courses',
       settingsAria: 'Paramètres de l’application',
     },
 
@@ -251,8 +250,6 @@ export const translations = {
       savedSuffix: 'sauvés',
       notConsumed: 'Non consommé',
       exportData: 'Exporter mes données',
-      resetData: 'Réinitialiser',
-      resetConfirm: 'Réinitialiser les données avec les exemples par défaut ?',
       close: 'Fermer',
     },
 
@@ -265,6 +262,30 @@ export const translations = {
       dayOption: (n: number) => (n > 1 ? `${n} jours` : `${n} jour`),
       close: 'Fermer',
       savedToast: 'Préférence de rappel enregistrée.',
+    },
+
+    // ShoppingListModal
+    shoppingList: {
+      title: 'Liste de courses',
+      subtitle: (n: number) => `${n} article${n > 1 ? 's' : ''} à acheter`,
+      addPlaceholder: 'Ajouter un article...',
+      add: 'Ajouter',
+      empty: 'Votre liste de courses est vide.',
+      emptyHint: 'Les produits consommés ou jetés y sont ajoutés automatiquement.',
+      clearChecked: 'Vider les achetés',
+      close: 'Fermer',
+      addedToast: (name: string) => `"${name}" ajouté à la liste de courses.`,
+    },
+
+    // Recipe suggestion (à partir des produits qui périment bientôt)
+    recipe: {
+      cardTitle: 'Une idée pour cuisiner ce qui périme bientôt ?',
+      cardHint: (n: number) => `${n} produit${n > 1 ? 's' : ''} à utiliser en priorité`,
+      suggestButton: 'Suggérer une recette',
+      loading: 'Recherche d’une idée recette...',
+      errorGeneric: 'Impossible de générer une suggestion pour le moment. Réessayez plus tard.',
+      tryAgain: 'Une autre idée',
+      close: 'Fermer',
     },
   },
   en: {
@@ -283,7 +304,6 @@ export const translations = {
     markedDiscarded: (name: string) => `🗑️ "${name}" marked as discarded.`,
     productUpdated: (name: string) => `Product "${name}" updated!`,
     productSaved: (name: string) => `Product "${name}" saved successfully!`,
-    dataReset: 'Data reset successfully.',
     productRestored: 'Product restored to your active stock.',
     simulatedAlertToast: (type: string, name: string) => `🔔 ${type} alert: "${name}"!`,
 
@@ -292,7 +312,7 @@ export const translations = {
       savedShort: 'Saved:',
       statsAria: 'View anti-waste statistics',
       notificationsAria: 'Notification and reminder center',
-      historyAria: 'History of consumed products',
+      shoppingListAria: 'Shopping list',
       settingsAria: 'Application settings',
     },
 
@@ -496,8 +516,6 @@ export const translations = {
       savedSuffix: 'saved',
       notConsumed: 'Not consumed',
       exportData: 'Export my data',
-      resetData: 'Reset',
-      resetConfirm: 'Reset data with the default examples?',
       close: 'Close',
     },
 
@@ -509,6 +527,28 @@ export const translations = {
       dayOption: (n: number) => (n > 1 ? `${n} days` : `${n} day`),
       close: 'Close',
       savedToast: 'Reminder preference saved.',
+    },
+
+    shoppingList: {
+      title: 'Shopping list',
+      subtitle: (n: number) => `${n} item${n > 1 ? 's' : ''} to buy`,
+      addPlaceholder: 'Add an item...',
+      add: 'Add',
+      empty: 'Your shopping list is empty.',
+      emptyHint: 'Consumed or discarded products are added here automatically.',
+      clearChecked: 'Clear bought items',
+      close: 'Close',
+      addedToast: (name: string) => `"${name}" added to your shopping list.`,
+    },
+
+    recipe: {
+      cardTitle: 'Need an idea for what’s expiring soon?',
+      cardHint: (n: number) => `${n} item${n > 1 ? 's' : ''} to use first`,
+      suggestButton: 'Suggest a recipe',
+      loading: 'Looking for a recipe idea...',
+      errorGeneric: 'Unable to generate a suggestion right now. Please try again later.',
+      tryAgain: 'Another idea',
+      close: 'Close',
     },
   },
 };

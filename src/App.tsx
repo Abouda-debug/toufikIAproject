@@ -26,8 +26,14 @@ import {
   getStoredProducts,
   saveProductsToStorage,
   calculateAntiWasteStats,
-  INITIAL_PRODUCTS,
 } from './data/productStorage';
+import {
+  getShoppingList,
+  addShoppingListItem,
+  toggleShoppingListItem,
+  removeShoppingListItem,
+  clearCheckedItems,
+} from './data/shoppingListStorage';
 import {
   getDaysDifference,
   getExpirationUrgency,
@@ -49,6 +55,8 @@ import { ProductConfirmationModal } from './components/ProductConfirmationModal'
 import { NotificationsModal } from './components/NotificationsModal';
 import { StatsModal } from './components/StatsModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ShoppingListModal } from './components/ShoppingListModal';
+import { RecipeSuggestionCard } from './components/RecipeSuggestionCard';
 import { useTranslations } from './i18n';
 
 export default function App() {
@@ -57,6 +65,7 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'urgent' | 'warning' | 'safe'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [reminderDaysBefore, setReminderDaysBefore] = useState<number>(() => getReminderDaysPreference());
+  const [shoppingList, setShoppingList] = useState(() => getShoppingList());
 
   // Modals state
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -64,6 +73,7 @@ export default function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
 
   // Transient data for confirmation & editing
   const [extractedData, setExtractedData] = useState<ExtractedProductData | null>(null);
@@ -176,6 +186,9 @@ export default function App() {
           : p
       )
     );
+    if (target) {
+      setShoppingList((prev) => addShoppingListItem(prev, target.name));
+    }
     showToast(t.savedFromWaste(target?.name || 'Produit'), 'success');
   };
 
@@ -189,6 +202,9 @@ export default function App() {
           : p
       )
     );
+    if (target) {
+      setShoppingList((prev) => addShoppingListItem(prev, target.name));
+    }
     showToast(t.markedDiscarded(target?.name || 'Produit'), 'warning');
   };
 
@@ -256,13 +272,6 @@ export default function App() {
     setIsCameraOpen(true);
   };
 
-  // Actions: Reset with initial demo data
-  const handleResetData = () => {
-    setProducts(INITIAL_PRODUCTS);
-    setIsStatsOpen(false);
-    showToast(t.dataReset, 'info');
-  };
-
   // Actions: Restore a consumed or discarded product back to active
   const handleRestoreProduct = (id: string) => {
     setProducts((prev) =>
@@ -278,15 +287,44 @@ export default function App() {
     showToast(t.settings.savedToast, 'success');
   };
 
+  // Actions: Shopping list management
+  const handleAddShoppingItem = (name: string) => {
+    setShoppingList((prev) => addShoppingListItem(prev, name));
+  };
+
+  const handleToggleShoppingItem = (id: string) => {
+    setShoppingList((prev) => toggleShoppingListItem(prev, id));
+  };
+
+  const handleRemoveShoppingItem = (id: string) => {
+    setShoppingList((prev) => removeShoppingListItem(prev, id));
+  };
+
+  const handleClearCheckedShoppingItems = () => {
+    setShoppingList((prev) => clearCheckedItems(prev));
+  };
+
+  // Produits urgents/à surveiller, pour la suggestion de recette
+  const urgentAndWarningNames = useMemo(() => {
+    return activeProductsSorted
+      .filter((p) => {
+        const urgency = getExpirationUrgency(p.expirationDate);
+        return urgency === 'urgent' || urgency === 'expired' || urgency === 'warning';
+      })
+      .map((p) => p.name);
+  }, [activeProductsSorted]);
+
   return (
     <div className="min-h-screen bg-[#F8FAF8] flex flex-col font-['Plus_Jakarta_Sans',system-ui,-apple-system,sans-serif] text-[#191C1A]">
       {/* Top Application Bar (Clean Jetpack Compose style) */}
       <TopAppBar
         stats={stats}
         urgentCount={counts.urgent}
+        shoppingListCount={shoppingList.filter((item) => !item.checked).length}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenStats={() => setIsStatsOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenShoppingList={() => setIsShoppingListOpen(true)}
       />
 
       {/* Main Content View (Single-View Constraint, highly focused) */}
@@ -303,6 +341,9 @@ export default function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
+
+        {/* Suggestion de recette à partir des produits qui périment bientôt */}
+        <RecipeSuggestionCard productNames={urgentAndWarningNames} />
 
         {/* Section Title & Quick Action info */}
         <div className="flex items-center justify-between mt-5 mb-3 px-1">
@@ -444,7 +485,6 @@ export default function App() {
         onClose={() => setIsStatsOpen(false)}
         stats={stats}
         products={products}
-        onResetData={handleResetData}
         onRestoreProduct={handleRestoreProduct}
       />
 
@@ -453,6 +493,16 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         reminderDaysBefore={reminderDaysBefore}
         onChangeReminderDays={handleChangeReminderDays}
+      />
+
+      <ShoppingListModal
+        isOpen={isShoppingListOpen}
+        onClose={() => setIsShoppingListOpen(false)}
+        items={shoppingList}
+        onAddItem={handleAddShoppingItem}
+        onToggleItem={handleToggleShoppingItem}
+        onRemoveItem={handleRemoveShoppingItem}
+        onClearChecked={handleClearCheckedShoppingItems}
       />
     </div>
   );

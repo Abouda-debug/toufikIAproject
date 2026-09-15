@@ -7,7 +7,6 @@ import {
   Euro,
   Sparkles,
   Download,
-  RotateCcw,
   CheckCircle2,
   Layers,
 } from 'lucide-react';
@@ -22,7 +21,6 @@ interface StatsModalProps {
   onClose: () => void;
   stats: AntiWasteStats;
   products: ProductItem[];
-  onResetData: () => void;
   onRestoreProduct: (id: string) => void;
 }
 
@@ -31,7 +29,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
   onClose,
   stats,
   products,
-  onResetData,
   onRestoreProduct,
 }) => {
   const { t, lang } = useTranslations();
@@ -249,7 +246,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             )}
           </div>
 
-          {/* Data Tools: Export & Reset */}
+          {/* Data Tools: Export */}
           <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-2">
             <button
               id="btn-export-json"
@@ -258,19 +255,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             >
               <Download className="w-3.5 h-3.5" />
               {s.exportData}
-            </button>
-
-            <button
-              id="btn-reset-demo-data"
-              onClick={() => {
-                if (confirm(s.resetConfirm)) {
-                  onResetData();
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 text-xs font-semibold transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              {s.resetData}
             </button>
           </div>
         </div>

@@ -165,7 +165,7 @@ Reponds UNIQUEMENT en JSON, format exact :
         lastError = err;
         const errMsg = err?.message || String(err);
         const isQuota = errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("quota");
-        console.warn(`Modèle ${modelName} ${isQuota ? "quota atteint (429)" : "indisponible (503)"}, bascule sur secours.`);
+        console.warn(`Modèle ${modelName} ${isQuota ? "quota atteint (429)" : "indisponible (503)"}, bascule sur secours. Détail: ${errMsg}`);
         if (!isQuota) {
           await new Promise((resolve) => setTimeout(resolve, 250));
         }
@@ -206,6 +206,96 @@ Reponds UNIQUEMENT en JSON, format exact :
     });
   } catch (error: any) {
     console.error("Erreur scan produit Gemini:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Erreur de communication avec le service Gemini.",
+    });
+  }
+});
+
+// Endpoint: Suggestion de recette à partir des produits qui périment bientôt
+app.post("/api/suggest-recipe", async (req, res) => {
+  try {
+    const { productNames, lang = "fr" } = req.body;
+
+    if (!Array.isArray(productNames) || productNames.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Aucun produit fourni pour la suggestion de recette.",
+      });
+    }
+
+    const ai = getGeminiClient();
+    const items = productNames.slice(0, 8).join(", ");
+
+    const systemPrompt =
+      lang === "en"
+        ? `You are a friendly home-cooking assistant helping reduce food waste. Given a list of ingredients about to expire, suggest ONE simple, quick recipe idea using as many of them as possible. Assume basic pantry staples (salt, oil, pasta, etc.) are available. Respond in English, in JSON format exactly: {"titre": "dish name", "recette": "3 to 5 short steps, one paragraph"}`
+        : `Tu es un assistant culinaire sympathique qui aide à réduire le gaspillage alimentaire. À partir d'une liste d'ingrédients qui périment bientôt, propose UNE idée de recette simple et rapide utilisant un maximum de ces ingrédients. Suppose que les basiques de placard (sel, huile, pâtes, etc.) sont disponibles. Réponds en français, au format JSON exact : {"titre": "nom du plat", "recette": "3 à 5 étapes courtes, en un paragraphe"}`;
+
+    const promptText =
+      lang === "en"
+        ? `Ingredients about to expire: ${items}`
+        : `Ingrédients qui périment bientôt : ${items}`;
+
+    const candidateModels = ["gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-flash-latest"];
+    let response: any = null;
+    let lastError: any = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents: {
+            parts: [{ text: promptText }],
+          },
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.6,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                titre: {
+                  type: Type.STRING,
+                  description: "Nom du plat suggéré",
+                },
+                recette: {
+                  type: Type.STRING,
+                  description: "Étapes courtes de préparation, en un paragraphe",
+                },
+              },
+              required: ["titre", "recette"],
+            },
+          },
+        });
+
+        if (response && response.text) {
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`[suggest-recipe] Modèle ${modelName} indisponible: ${err?.message || err}`);
+      }
+    }
+
+    if (!response || !response.text) {
+      return res.status(503).json({
+        success: false,
+        error: lastError?.message || "Service de suggestion temporairement indisponible.",
+      });
+    }
+
+    const parsed = JSON.parse(response.text.trim());
+    return res.json({
+      success: true,
+      data: {
+        title: parsed.titre,
+        recipe: parsed.recette,
+      },
+    });
+  } catch (error: any) {
+    console.error("Erreur suggestion recette Gemini:", error);
     return res.status(500).json({
       success: false,
       error: error.message || "Erreur de communication avec le service Gemini.",
